@@ -1,0 +1,63 @@
+<html>
+    <body>
+<p>This is the readme file for the model associated with the paper:
+<div style="margin-left: 2em">
+Matus Tomko, Lubica Benuskova, Peter Jedlicka (2021)
+A new reduced-morphology model for CA1 pyramidal cells 
+and its validation and comparison with other models using HippoUnit
+</div>
+</p>
+<p>
+Send bug reports, comments and questions on how to use this model to
+matus.tomko __at__ fmph.uniba.sk
+</p>
+<p>
+The code for CA1 pyramidal cell morphology was adapted (by adding oblique branches) based on Cutsuridis et al:
+<a href="https://modeldb.yale.edu/123815">https://modeldb.yale.edu/123815</a>
+</p>
+<p>
+Active and passive mechanisms were adapted based on Migliore et al: <a href="https://modeldb.yale.edu/244688">https://modeldb.yale.edu/244688</a>
+</p>
+<p>
+The model was optimized and tested using HippoUnit (Saray et al., 2020):
+<a href="https://github.com/KaliLab/hippounit">https://github.com/KaliLab/hippounit</a>
+</p>
+<p>There are two files of the model. "Original" is the original model used in the paper.
+In the "original" model, side branches are connected to the middle of sections forming the apical trunk.
+Therefore it is important to keep the odd number of sections segments, because should we want to change
+the number of segments, if the previous and new nseg values are both odd, the node at 0.5 will persist. 
+In the "updated" model, each apical trunk section is divided into two sections of equal lenghts and 
+side braches are connected to the ends of sections. The number and position of the side branches are preserved.</p>
+
+<ol>
+    <li>
+        Install NEURON with Python support (this is enabled in all NEURON installers):
+        <a href="https://neuron.yale.edu/neuron/download">neuron.yale.edu/neuron/download</a>
+    </li>
+    <li>
+        Compile the mod files using "nrnivmodl Mods" (works on all platforms; other options are also available on other platforms)
+    </li>
+    <li>
+        Run the python script for the Figure to be reproduced (see the
+following) in the same directory.
+    </li>
+</ol>
+
+<p>The script <code>bAP.py</code> produces a simulation of the backpropagation of 
+the action potential into the apical trunk.</p>
+<video src="https://senselab.med.yale.edu/modeldb/getModelFile?model=266901&AttrID=23&s=yes&file=/%2fTomkoEtAl2021%2ffigs%2fmodel.mp4" style="width:600px" type="video/mp4" controls autoplay></video>
+<img src="./figs/traces.png" alt="traces"><br>
+<img src="./figs/AP1_traces.png" alt="AP1_traces"><br>
+<img src="./figs/AP1_amps.png" alt="AP1_amps"><br>
+<p>
+Note an increase in bAP attenuation with increasing distance from soma. 
+</p>
+<p>
+The script <code>oblique_integration.py</code> produces a simulation of 
+the synaptic integration of 5 synchronous synapses
+in the proximal and distal location of the oblique dendrite.
+<img src="./figs/oblique_integration.png" alt="oblique_integration">
+Note dendritic spikes (orange trace) triggered by synaptic activation.</p>
+</body>
+
+</html>

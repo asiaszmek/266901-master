@@ -1,0 +1,104 @@
+cacum.cpp: ../cacum.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "cacum.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./cacum.o: cacum.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+cagk.cpp: ../cagk.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "cagk.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./cagk.o: cagk.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+cal2.cpp: ../cal2.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "cal2.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./cal2.o: cal2.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+can2.cpp: ../can2.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "can2.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./can2.o: can2.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+cat.cpp: ../cat.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "cat.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./cat.o: cat.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+h.cpp: ../h.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "h.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./h.o: h.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+kad.cpp: ../kad.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "kad.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./kad.o: kad.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+kaprox.cpp: ../kaprox.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "kaprox.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./kaprox.o: kaprox.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+kca.cpp: ../kca.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "kca.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./kca.o: kca.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+kdrca1.cpp: ../kdrca1.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "kdrca1.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./kdrca1.o: kdrca1.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+kmb.cpp: ../kmb.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "kmb.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./kmb.o: kmb.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+naxn.cpp: ../naxn.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "naxn.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./naxn.o: naxn.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
+NMDA_CA1_pyr_SC.cpp: ../NMDA_CA1_pyr_SC.mod $(NOCMODL)
+	@printf " -> $(C_GREEN)NMODL$(C_RESET) $<\\n"
+	(cd "..";  MODLUNIT=$(NRNUNITS) $(NOCMODL) "NMDA_CA1_pyr_SC.mod"  -o "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64" )
+
+./NMDA_CA1_pyr_SC.o: NMDA_CA1_pyr_SC.cpp
+	@printf " -> $(C_GREEN)Compiling$(C_RESET) /home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<\\n"
+	$(CXXCOMPILE) -I".." $(INCLUDES) -fPIC -c "/home/wojciech/Projects/266901-master/TomkoEtAl2021/Mods/x86_64/$<" -o $@
+
