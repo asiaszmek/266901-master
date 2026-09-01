@@ -95,9 +95,9 @@ def extract_AP1_amps(v_vec_soma, v_vecs_apical_trunk, t_vec):
     traces.append(trace)
 
     efel.reset()
-    efel.setDoubleSetting('interp_step', 0.025)
-    efel.setDoubleSetting('DerivativeThreshold', 40.0)
-    efel_results = efel.getFeatureValues(traces, ['inv_first_ISI', 'AP_begin_time', 'doublet_ISI'])
+    efel.set_setting('interp_step', 0.025)
+    efel.set_setting('DerivativeThreshold', 40.0)
+    efel_results = efel.get_feature_values(traces, ['inv_first_ISI', 'AP_begin_time', 'doublet_ISI'])
     efel.reset()
 
     soma_AP_begin_time = efel_results[0]['AP_begin_time']
