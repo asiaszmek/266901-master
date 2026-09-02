@@ -16,12 +16,13 @@ import json
 
 import pkg_resources
 import sys
-from spines import add_spines
+import spines
 SPINE_COUNTS = [0, 12, 18]
 WEIGHT_AMPA = 0.0008
 n_spines = 12
 
-def build_cell():
+
+def build_cell(Vrest):
     return h.CA1_PC_Tomko()
 
 
@@ -43,11 +44,13 @@ class ModelLoader(sciunit.Model,
             
         
     def Tomko(self):
-        cell = build_cell()
+        cell = build_cell(self.v_init)
         dend = cell.rad_t2
-        necks, heads = add_spines(dend, n_spines)
+        necks, heads = spines.add_spines(dend, n_spines)
         syn_seg = dend(0.5) if n_spines == 0 else heads[0](0.5)
         targets = [dend(0.5)] if n_spines == 0 else [hd(0.5) for hd in heads]
+        for section in cell.all:
+            spines.balance_currents(section, self.v_init)
 
         syns, ncs, stims = [], [], []
         
@@ -77,7 +80,7 @@ class ModelLoader(sciunit.Model,
             self.name = name
             self.start = 150
             self.max_dist_from_soma = 150
-            self.v_init = -70
+            self.v_init = -65
             self.celsius = 34
             self.c_step_start = 0.00004
             self.c_step_stop = 0.000004

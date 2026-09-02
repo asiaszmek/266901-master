@@ -3,9 +3,9 @@ import h5py
 import numpy as np
 from neuron import h, gui, load_mechanisms
 
-from spines import add_spines
+import spines 
 
-SPINE_COUNTS = [0, 12, 18]
+SPINE_COUNTS = [1, 12, 18]
 PROTOCOLS = {
     '1EPSP': (1, 10.0),
     '4EPSP_100Hz': (4, 10.0),
@@ -15,24 +15,29 @@ PROTOCOLS = {
 WEIGHT_AMPA = 0.0008
 STIM_START = 150.0
 TAIL = 300.0
+Vrest = -65
 
 
 load_mechanisms('./Mods/')
 h.xopen('pyramidal_cell_weak_bAP_original.hoc')
 
 
-def build_cell():
-    return h.CA1_PC_Tomko()
-
+def build_cell(Vrest=-65):
+    cell = h.CA1_PC_Tomko()
+    return cell
 
 def run(n_spines, number, interval):
-    cell = build_cell()
+    cell = build_cell(Vrest)
     dend = cell.rad_t2
-    necks, heads = add_spines(dend, n_spines)
+    necks, heads = spines.add_spines(dend, n_spines)
+    for section in cell.all:
+        spines.balance_currents(section, Vrest)
+
     syn_seg = dend(0.5) if n_spines == 0 else heads[0](0.5)
     targets = [dend(0.5)] if n_spines == 0 else [hd(0.5) for hd in heads]
 
     syns, ncs, stims = [], [], []
+
     for seg in targets:
         ampa = h.Exp2Syn(seg)
         ampa.tau1, ampa.tau2 = 0.1, 2.0
