@@ -84,3 +84,18 @@ def add_spines(dend, n, x0=0.1, x1=0.9, neck_L=NECK_L, neck_diam=NECK_DIAM,
     compensate_for_spines(dend, positions)
     return necks, heads
  
+
+
+def add_pointprocess(section, syn_type, parameters, locations=[0.5]):
+    """
+    From Salinos et al 2019
+    """
+    synapse_group = []
+    for location in locations:
+        synapse = getattr(h, syn_type)(location, sec=section)
+        for name, value in list(parameters.items()):
+            setattr(synapse, name, value)
+        synapse_group.append(synapse)
+    if len(synapse_group) == 1:
+        synapse_group = synapse_group[0]
+    return synapse_group

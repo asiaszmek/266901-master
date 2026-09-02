@@ -5,7 +5,7 @@ from neuron import h, gui, load_mechanisms
 
 import spines 
 
-SPINE_COUNTS = [1, 12, 18]
+SPINE_COUNTS = [1, 2, 3, 4,5, 10, 11,  12, 15, 18]
 PROTOCOLS = {
     '1EPSP': (1, 10.0),
     '4EPSP_100Hz': (4, 10.0),
@@ -34,21 +34,27 @@ def run(n_spines, number, interval):
         spines.balance_currents(section, Vrest)
 
     syn_seg = dend(0.5) if n_spines == 0 else heads[0](0.5)
-    targets = [dend(0.5)] if n_spines == 0 else [hd(0.5) for hd in heads]
+    targets = [dend] if n_spines == 0 else [hd for hd in heads]
 
     syns, ncs, stims = [], [], []
 
-    for seg in targets:
-        ampa = h.Exp2Syn(seg)
-        ampa.tau1, ampa.tau2 = 0.1, 2.0
-        nmda = h.NMDA_CA1_pyr_SC(seg)
-
+    for sec in targets:
+        ampa = spines.add_pointprocess(sec, 'Wghkampa_preML',
+                                {'Pmax':4e-6,
+                                 'glut_factor': 40})
+        nmda = spines.add_pointprocess(sec, 'ghknmda',
+                                {'Pmax':4.5*4e-6,
+                                 'mg':0.0001,
+                                 'mgb_k':0.22,
+                                 'Area': 1.0})
+       
+        
         stim = h.NetStim()
         stim.number, stim.interval, stim.start, stim.noise = number, interval, STIM_START, 0
         stims.append(stim)
 
         ncs.append(h.NetCon(stim, ampa, 0, 0, WEIGHT_AMPA))
-        ncs.append(h.NetCon(stim, nmda, 0, 0, WEIGHT_AMPA * 0.5))
+        ncs.append(h.NetCon(stim, nmda, 0, 0, WEIGHT_AMPA))
         syns += [ampa, nmda]
 
     ica_soma = h.Vector().record(cell.soma[0](0.5)._ref_ica)
