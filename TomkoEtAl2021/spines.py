@@ -34,12 +34,33 @@ def balance_currents(section, Vrest, check = False):
 
 
 
-def compensate_for_spines(dend,positions):
+def compensate_for_spines(dend, positions):
     for x in positions.keys():
         segment = dend(x)
         seg_surf = segment.area()
+        mech_dict = dend.psection()["density_mechs"]
+        for mech in mech_dict:
+            if 'gbar' not in mech_dict[mech].keys():
+                 continue
+            tot_spine_cond = 0
+            for head, neck in positions[x]:
+                for i, spine_seg in enumerate(head):
+                    if mech in head.psection()["density_mechs"]:
+    
+                        cond = head.psection()["density_mechs"][mech]['gbar'][i]
+                        tot_spine_cond += spine_seg.area() * cond
+                for i, spine_seg in enumerate(neck):
+                    if mech in neck.psection()["density_mechs"]:
+                        cond = neck.psection()["density_mechs"][mech]['gbar'][i]
+                        tot_spine_cond += spine_seg.area() * cond
+            seg_mech = getattr(segment, mech)
+            seg_cond = getattr(seg_mech, "gbar")
+            new_cond = (seg_cond*seg_surf - tot_spine_cond)/seg_surf
+            setattr(seg_mech, "gbar", new_cond)
+                        
         spine_g = 0
         spine_cm = 0
+        
         for head, neck in positions[x]:
             for spine_seg in head:
                 spine_g += spine_seg.area()*spine_seg.g_pas
@@ -71,10 +92,18 @@ def add_spines(dend, n, x0=0.1, x1=0.9, neck_L=NECK_L, neck_diam=NECK_DIAM,
         head.insert('pas')
         head.g_pas, head.e_pas = G_PAS, E_PAS
         head.insert('cacum')
-        head.insert('cal')
+        head(0.5).tau_cacum = 12  # Sabatini again
+        #use the same values as in the dendrite
+        head.insert('cal12')
+        
+        head(0.5).gbar_cal12 = 8.0324964335287e-06
+        head.insert('cal13')
+        head(0.5).gbar_cal13 = 8.0324964335287e-06
         head.insert('cat')
+        head(0.5).gbar_cat = 1.184948741542104e-06
         head.insert('can')
-        head(0.5).tau_cacum = 12
+        head(0.5).gbar_can = 2.2618914062501833e-06       
+        
         neck.connect(dend(x), 0)
         head.connect(neck(1), 0)
         necks.append(neck)
