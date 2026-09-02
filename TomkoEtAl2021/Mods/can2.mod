@@ -5,7 +5,8 @@ TITLE n-calcium channel
 UNITS {
 	(mA) = (milliamp)
 	(mV) = (millivolt)
-
+        (molar) = (1/liter)
+        (mM) = (millimolar)
 	FARADAY = 96520 (coul)
 	R = 8.3134 (joule/degC)
 	KTOMV = .0853 (mV/degC)
