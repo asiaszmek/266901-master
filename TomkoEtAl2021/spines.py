@@ -95,15 +95,13 @@ def add_spines(dend, n, x0=0.1, x1=0.9, neck_L=NECK_L, neck_diam=NECK_DIAM,
         head(0.5).tau_cacum = 12  # Sabatini again
         #use the same values as in the dendrite
         head.insert('cal12')
-        
         head(0.5).gbar_cal12 = 8.0324964335287e-06
         head.insert('cal13')
         head(0.5).gbar_cal13 = 8.0324964335287e-06
-        head.insert('cat')
-        head(0.5).gbar_cat = 1.184948741542104e-06
+        head.insert('car')
+        head(0.5).gbar_car = 4e-06
         head.insert('can')
-        head(0.5).gbar_can = 2.2618914062501833e-06       
-        
+        head(0.5).gbar_can = 2.2618914062501833e-06
         neck.connect(dend(x), 0)
         head.connect(neck(1), 0)
         necks.append(neck)
@@ -112,7 +110,8 @@ def add_spines(dend, n, x0=0.1, x1=0.9, neck_L=NECK_L, neck_diam=NECK_DIAM,
             positions[x] = [[head, neck]]
         else:
             positions.append([head, neck])
-    compensate_for_spines(dend, positions)
+    if n:
+        compensate_for_spines(dend, positions)
     return necks, heads
  
 

@@ -15,53 +15,50 @@ PARAMETER {
 	v (mV)
 	celsius 	(degC)
 	gbar=.003 (mho/cm2)
-	ki=.001 (mM)
-	cai = 50.e-6 (mM)
-	cao = 2 (mM)
-	q10 = 5
-	mmin=0.2
-	tfa = 1
-	a0m =0.1
-	zetam = 2
-	vhalfm = 4
-	gmm=0.1	
-	ggk
+	ki=.0005 (mM)
+	cai (mM)
+	cao (mM)
+	tau_cdi=43 (ms)
+        tfa=1
 }
 
 
 NEURON {
-	SUFFIX cal
-	USEION ca READ cai,cao WRITE ica
-        RANGE gbar,cai, ica, gcal, ggk
+	SUFFIX cal12
+	USEION ca READ cai, cao WRITE ica
+        RANGE gbar,cai
         GLOBAL minf,tau
 }
 
 STATE {
-	m
+          m
+	  cdi
 }
 
 ASSIGNED {
 	ica (mA/cm2)
         gcal (mho/cm2)
         minf
+	cdiinf
         tau   (ms)
 }
 
 INITIAL {
 	rate(v)
 	m = minf
+        cdi = cdiinf
 }
 
 BREAKPOINT {
-	SOLVE state METHOD cnexp
-	gcal = gbar*m*m*h2(cai)
-	ggk=ghk(v,cai,cao)
-	ica = gcal*ggk
+     SOLVE state METHOD cnexp
+	
+	gcal = gbar*m*m*cdi
+	ica = gcal*ghk(v,cai,cao)
 
 }
 
 FUNCTION h2(cai(mM)) {
-	h2 = ki/(ki+cai)
+	h2 = ki^3/(ki^3+cai^3)
 }
 
 
@@ -87,32 +84,45 @@ FUNCTION efun(z) {
 }
 
 FUNCTION alp(v(mV)) (1/ms) {
+	TABLE FROM -150 TO 150 WITH 200
 	alp = 15.69*(-1.0*v+81.5)/(exp((-1.0*v+81.5)/10.0)-1.0)
 }
 
 FUNCTION bet(v(mV)) (1/ms) {
+	TABLE FROM -150 TO 150 WITH 200
 	bet = 0.29*exp(-v/10.86)
-}
-
-FUNCTION alpmt(v(mV)) {
-  alpmt = exp(0.0378*zetam*(v-vhalfm)) 
-}
-
-FUNCTION betmt(v(mV)) {
-  betmt = exp(0.0378*zetam*gmm*(v-vhalfm)) 
 }
 
 DERIVATIVE state {  
         rate(v)
+	cdiinf = h2(cai)
         m' = (minf - m)/tau
+	cdi' = (cdiinf - cdi)/tau_cdi
 }
 
 PROCEDURE rate(v (mV)) { :callable from hoc
-        LOCAL a, b, qt
-        qt=q10^((celsius-25)/10)
+        LOCAL a
         a = alp(v)
-        b = 1/((a + bet(v)))
-        minf = a*b
-	tau = betmt(v)/(qt*a0m*(1+alpmt(v)))
-	if (tau<mmin/qt) {tau=mmin/qt}
+        tau = 1/(tfa*(a + bet(v)))
+        minf = tfa*a*tau
 }
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

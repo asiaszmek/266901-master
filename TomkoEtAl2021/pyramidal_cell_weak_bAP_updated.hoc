@@ -231,7 +231,9 @@ proc insertChannel() {
         insert kap
         insert hd
         insert can
+        insert car	
         insert cal12
+	insert cal13
         insert cat
         insert kca
         insert cagk
@@ -242,8 +244,10 @@ proc insertChannel() {
         insert kad
         insert hd
         insert can
+        insert car
         insert cal12
-        insert cat
+	insert cal13
+	insert cat
         insert kca
         insert cagk
         insert cacum
@@ -253,7 +257,9 @@ proc insertChannel() {
         insert kad
         insert hd
         insert can
+	insert car	
         insert cal12
+	insert cal13	
         insert cat
         insert kca
         insert cagk
@@ -283,8 +289,11 @@ proc biophys() {
         gbar_kmb = 0.001
         gkdrbar_kdr = 0.0015
         gbar_nax = 0.035
-        gbar_cal12 =  0.0005
+        gbar_cal12 =  0.0005*0.9
+	gbar_cal13 =  0.0005*0.1
         gbar_can = 2.2618914062501833e-06
+        gbar_car = 2.e-06
+
         gbar_cat =  0.00005
         gbar_kca = 0.0015
         gbar_cagk = 4.4820097108998517e-05
@@ -305,8 +314,10 @@ proc biophys() {
     forsec apical {
         gkdrbar_kdr = 0.0043036502438625682
         gbar_nax = 0.038280628170345957
-        gbar_cal12 = 8.0324964335287e-06
+        gbar_cal12 = 0.7*8.0324964335287e-06
+        gbar_cal13 = 0.3*0.05*8.0324964335287e-06
         gbar_can = 2.2618914062501833e-06
+        gbar_car = 4e-6
         gbar_cat = 1.184948741542104e-06
         gbar_kca = 9.0311387916396796e-05
         gbar_cagk = 4.4820097108998517e-05
@@ -318,8 +329,10 @@ proc biophys() {
     forsec trunk_sec_list {
         gkdrbar_kdr = 0.02
         gbar_nax = 0.025
-        gbar_cal12 = 8.0324964335287e-06
+        gbar_cal12 = 0.7*8.0324964335287e-06
+        gbar_cal13 = 0.3*8.0324964335287e-06
         gbar_can = 2.2618914062501833e-06
+        gbar_can = 4e-6
         gbar_cat = 1.184948741542104e-06
         gbar_kca = 9.0311387916396796e-05
         gbar_cagk = 4.4820097108998517e-05
@@ -330,8 +343,10 @@ proc biophys() {
     forsec basal {
         gkdrbar_kdr = 0.0043036502438625682
         gbar_nax = 0.038280628170345957
-        gbar_cal12 = 8.0324964335287e-06
+        gbar_cal12 = 0.7*8.0324964335287e-06
+        gbar_cal13 = 0.3*8.0324964335287e-06
         gbar_can = 2.2618914062501833e-06
+        gbar_car = 4e-6
         gbar_cat = 1.184948741542104e-06
         gbar_kca = 9.0311387916396796e-05
         gbar_cagk = 4.4820097108998517e-05

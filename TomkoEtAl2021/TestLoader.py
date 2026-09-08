@@ -19,7 +19,7 @@ import sys
 import spines
 SPINE_COUNTS = [0, 12, 18]
 WEIGHT_AMPA = 0.0008
-n_spines = 12
+n_spines = 18
 
 
 def build_cell(Vrest):
@@ -73,7 +73,7 @@ class ModelLoader(sciunit.Model,
         """ This class should be used with Jupyter notebooks"""
         if name == "Tomko":
             load_mechanisms('./Mods/')
-            h.xopen('pyramidal_cell_weak_bAP_original.hoc')
+            h.xopen('pyramidal_cell_weak_bAP_updated.hoc')
 
             self.modelpath = os.path.join(".", "Mods") 
             self.model_args = {}
