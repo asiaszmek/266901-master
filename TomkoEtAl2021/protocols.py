@@ -1,4 +1,5 @@
 import sys
+import random
 import h5py
 import numpy as np
 from neuron import h, gui, load_mechanisms
@@ -16,7 +17,7 @@ WEIGHT_AMPA = 0.0008
 STIM_START = 150.0
 TAIL = 300.0
 Vrest = -65
-
+NSPINES = 100
 
 load_mechanisms('./Mods/')
 h.xopen('pyramidal_cell_weak_bAP_original.hoc')
@@ -28,14 +29,17 @@ def build_cell(Vrest=-65):
 
 def run(n_spines, number, interval):
     cell = build_cell(Vrest)
-    dend = cell.rad_t2
-    necks, heads = spines.add_spines(dend, n_spines)
+    dend = cell.lm_medium1
+    positions  = spines.add_spines(dend, NSPINES)
+    random.seed(1)
+    random_pos = random.sample(list(range(NSPINES)), n_spines)
+    # for a 150 um long dend 1 spine per um
     for section in cell.all:
         spines.balance_currents(section, Vrest)
-
-    syn_seg = dend(0.5) if n_spines == 0 else heads[0](0.5)
-    targets = [dend] if n_spines == 0 else [hd for hd in heads]
-
+    
+    head_list = [positions[x][0][0] for x in positions.keys()]
+    targets = [dend] if n_spines == 0 else [head_list[x] for
+                                            x in random_pos]
     syns, ncs, stims = [], [], []
 
     for sec in targets:
@@ -56,10 +60,20 @@ def run(n_spines, number, interval):
         ncs.append(h.NetCon(stim, ampa, 0, 0, WEIGHT_AMPA))
         ncs.append(h.NetCon(stim, nmda, 0, 0, WEIGHT_AMPA))
         syns += [ampa, nmda]
-
+    
     ica_soma = h.Vector().record(cell.soma[0](0.5)._ref_ica)
-    ica_dend = h.Vector().record(dend(0.5)._ref_ica)
-    ica_syn = h.Vector().record(syn_seg._ref_ica)
+    ica_dend = []
+    for x in dend:
+        ica_dend.append(h.Vector().record(x._ref_ica))
+        print(x, x.area())
+    ica_syn = []
+    if n_spines:
+        for x in positions.keys():
+            syn_seg = positions[x][0][0](0.5)
+            ica_syn.append(h.Vector().record(syn_seg._ref_ica))
+            print(syn_seg, syn_seg.area())
+    else:
+        ica_syn.append(h.Vector().record(dend(0.5)._ref_ica))
     t_vec = h.Vector().record(h._ref_t)
 
     h.dt = 0.025

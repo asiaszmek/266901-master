@@ -108,11 +108,10 @@ def add_spines(dend, n, x0=0.1, x1=0.9, neck_L=NECK_L, neck_diam=NECK_DIAM,
         heads.append(head)
         if x not in positions:
             positions[x] = [[head, neck]]
-        else:
-            positions.append([head, neck])
+      
     if n:
         compensate_for_spines(dend, positions)
-    return necks, heads
+    return positions
  
 
 

@@ -19,7 +19,7 @@ import sys
 import spines
 SPINE_COUNTS = [0, 12, 18]
 WEIGHT_AMPA = 0.0008
-n_spines = 18
+n_spines = 100
 
 
 def build_cell(Vrest):
@@ -45,8 +45,9 @@ class ModelLoader(sciunit.Model,
         
     def Tomko(self):
         cell = build_cell(self.v_init)
-        dend = cell.rad_t2
-        necks, heads = spines.add_spines(dend, n_spines)
+        dend = cell.lm_medium1
+        positions = spines.add_spines(dend, n_spines)
+        heads = [positions[x][0][0] for x in positions.keys()]
         syn_seg = dend(0.5) if n_spines == 0 else heads[0](0.5)
         targets = [dend(0.5)] if n_spines == 0 else [hd(0.5) for hd in heads]
         for section in cell.all:

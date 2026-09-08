@@ -2,6 +2,7 @@ import os
 import h5py
 import matplotlib.pyplot as plt
 
+
 FNAME = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'results.h5')
 
 f = h5py.File(FNAME, 'r')
@@ -16,7 +17,8 @@ for i, protocol in enumerate(protocols):
     for j, spines_key in enumerate(spine_keys):
         ax = axes[i, j]
         grp = f[protocol][spines_key]
-        ax.plot(grp['t'][:], grp['ica_dend'][:])
+        for k, x in enumerate(grp['ica_syn']):
+            ax.plot(grp['t'][:], x[:], label=k)#labels[k])
         ax.set_title(protocol + ' - ' + spines_key)
 
         min_y.append(min(ax.get_ylim()))
@@ -29,11 +31,11 @@ for i, protocol in enumerate(protocols):
             
             axes[i, j].set_xticks([])
         if j == 0:
-            ax.set_ylabel('ica_dend (mA/cm2)')
+            ax.set_ylabel('ica_syn (mA/cm2)')
         else:
             axes[i, j].set_yticks([])
     
-            
+axes[0, 0].legend()
 plt.tight_layout()
 plt.show()
 

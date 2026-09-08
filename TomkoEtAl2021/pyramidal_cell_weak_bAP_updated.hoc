@@ -201,7 +201,7 @@ proc geom() {
 
 proc geom_nseg() {
   forsec all {
-	nseg = 1 + 2*int(L/40)
+	nseg = 1 + 2*int(L/30)
   }
 }
 
