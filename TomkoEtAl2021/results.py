@@ -17,7 +17,7 @@ for i, protocol in enumerate(protocols):
     for j, spines_key in enumerate(spine_keys):
         ax = axes[i, j]
         grp = f[protocol][spines_key]
-        for k, x in enumerate(grp['ica_syn']):
+        for k, x in enumerate(grp['ica_dend']):
             ax.plot(grp['t'][:], x[:], label=k)#labels[k])
         ax.set_title(protocol + ' - ' + spines_key)
 
@@ -31,7 +31,7 @@ for i, protocol in enumerate(protocols):
             
             axes[i, j].set_xticks([])
         if j == 0:
-            ax.set_ylabel('ica_syn (mA/cm2)')
+            ax.set_ylabel('ica_dend (mA/cm2)')
         else:
             axes[i, j].set_yticks([])
     

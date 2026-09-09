@@ -44,14 +44,13 @@ def run(n_spines, number, interval):
 
     for sec in targets:
         ampa = spines.add_pointprocess(sec, 'Wghkampa_preML',
-                                {'Pmax':4e-6,
-                                 'glut_factor': 40})
-        nmda = spines.add_pointprocess(sec, 'ghknmda',
-                                {'Pmax':4.5*4e-6,
-                                 'mg':0.0001,
-                                 'mgb_k':0.22,
-                                 'Area': 1.0})
-       
+                                       {'Pmax':4e-6,
+                                        'glut_factor': 40})
+        nmda = spines.add_pointprocess(sec,'ghknmda',
+                                       {'Pmax':4.5*4e-6,
+                                        'mg':0.0001,
+                                        'mgb_k':0.22,
+                                        'Area': 1.0})
         
         stim = h.NetStim()
         stim.number, stim.interval, stim.start, stim.noise = number, interval, STIM_START, 0
@@ -59,21 +58,24 @@ def run(n_spines, number, interval):
 
         ncs.append(h.NetCon(stim, ampa, 0, 0, WEIGHT_AMPA))
         ncs.append(h.NetCon(stim, nmda, 0, 0, WEIGHT_AMPA))
-        syns += [ampa, nmda]
+        syns += [nmda]
     
     ica_soma = h.Vector().record(cell.soma[0](0.5)._ref_ica)
     ica_dend = []
     for x in dend:
         ica_dend.append(h.Vector().record(x._ref_ica))
-        print(x, x.area())
-    ica_syn = []
+    ica_spine = []
+    ica_nmdar = []
     if n_spines:
         for x in positions.keys():
-            syn_seg = positions[x][0][0](0.5)
-            ica_syn.append(h.Vector().record(syn_seg._ref_ica))
-            print(syn_seg, syn_seg.area())
+            syn_seg = positions[x][0][0]
+            ica_spine.append(h.Vector().record(syn_seg(0.5)._ref_ica))
     else:
-        ica_syn.append(h.Vector().record(dend(0.5)._ref_ica))
+        ica_spine.append(h.Vector().record(dend(0.5)._ref_ica))
+
+    for syn in syns:
+        ica_nmdar.append(h.Vector().record(syn._ref_ica_nmdar))
+        
     t_vec = h.Vector().record(h._ref_t)
 
     h.dt = 0.025
@@ -85,7 +87,7 @@ def run(n_spines, number, interval):
     h.cvode_active(1)
     h.run()
 
-    return np.array(t_vec), np.array(ica_soma), np.array(ica_dend), np.array(ica_syn)
+    return np.array(t_vec), np.array(ica_soma), np.array(ica_dend), np.array(ica_spine), np.array(ica_nmdar)
 
 
 def main():
@@ -93,12 +95,15 @@ def main():
     with h5py.File(out_path, 'w') as f:
         for protocol, (number, interval) in PROTOCOLS.items():
             for n_spines in SPINE_COUNTS:
-                t, ica_soma, ica_dend, ica_syn = run(n_spines, number, interval)
+                t, ica_soma, ica_dend, ica_spine, ica_nmdar = run(n_spines,
+                                                                number,
+                                                                interval)
                 grp = f.create_group('%s/%dspines' % (protocol, n_spines))
                 grp.create_dataset('t', data=t)
                 grp.create_dataset('ica_soma', data=ica_soma)
                 grp.create_dataset('ica_dend', data=ica_dend)
-                grp.create_dataset('ica_syn', data=ica_syn)
+                grp.create_dataset('ica_spine', data=ica_spine)
+                grp.create_dataset('ica_nmdar', data=ica_nmdar)
                 print(protocol, n_spines, 'done')
 
 
