@@ -49,16 +49,21 @@ class ModelLoader(sciunit.Model,
         positions = spines.add_spines(dend, n_spines)
         heads = [positions[x][0][0] for x in positions.keys()]
         syn_seg = dend(0.5) if n_spines == 0 else heads[0](0.5)
-        targets = [dend(0.5)] if n_spines == 0 else [hd(0.5) for hd in heads]
+        targets = [dend] if n_spines == 0 else [hd for hd in heads]
         for section in cell.all:
             spines.balance_currents(section, self.v_init)
 
         syns, ncs, stims = [], [], []
         
-        for seg in targets:
-            ampa = h.Exp2Syn(seg)
-            ampa.tau1, ampa.tau2 = 0.1, 2.0
-            nmda = h.NMDA_CA1_pyr_SC(seg)
+        for sec in targets:
+            spines.add_pointprocess(sec, 'Wghkampa_preML',
+                                    {'Pmax':4e-6,
+                                     'glut_factor': 40})
+            spines.add_pointprocess(sec, 'ghknmda',
+                                    {'Pmax':4.5*4e-6,
+                                     'mg':0.0001,
+                                     'mgb_k':0.22,
+                                     'Area': 1.0})
         return cell
 
     def make_a_run(self, tstop):
