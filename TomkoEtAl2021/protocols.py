@@ -23,15 +23,16 @@ load_mechanisms('./Mods/')
 h.xopen('pyramidal_cell_weak_bAP_original.hoc')
 
 
-def build_cell(Vrest=-65):
+def build_cell():
     cell = h.CA1_PC_Tomko()
     return cell
 
 def run(n_spines, number, interval):
-    cell = build_cell(Vrest)
+    cell = build_cell()
     dend = cell.lm_medium1
     positions  = spines.add_spines(dend, NSPINES)
     random.seed(1)
+
     random_pos = random.sample(list(range(NSPINES)), n_spines)
     # for a 150 um long dend 1 spine per um
     for section in cell.all:
@@ -44,10 +45,10 @@ def run(n_spines, number, interval):
 
     for sec in targets:
         ampa = spines.add_pointprocess(sec, 'Wghkampa_preML',
-                                       {'Pmax':4e-6,
+                                       {'Pmax':1e-3,
                                         'glut_factor': 40})
         nmda = spines.add_pointprocess(sec,'ghknmda',
-                                       {'Pmax':4.5*4e-6,
+                                       {'Pmax':1e-3,
                                         'mg':0.0001,
                                         'mgb_k':0.22,
                                         'Area': 1.0})
@@ -61,6 +62,7 @@ def run(n_spines, number, interval):
         syns += [nmda]
     
     ica_soma = h.Vector().record(cell.soma[0](0.5)._ref_ica)
+    v_soma = h.Vector().record(cell.soma[0](0.5)._ref_v)
     ica_dend = []
     for x in dend:
         ica_dend.append(h.Vector().record(x._ref_ica))
@@ -87,7 +89,7 @@ def run(n_spines, number, interval):
     h.cvode_active(1)
     h.run()
 
-    return np.array(t_vec), np.array(ica_soma), np.array(ica_dend), np.array(ica_spine), np.array(ica_nmdar)
+    return np.array(t_vec), np.array(ica_soma), np.array(ica_dend), np.array(ica_spine), np.array(ica_nmdar), np.array(v_soma)
 
 
 def main():
@@ -95,7 +97,7 @@ def main():
     with h5py.File(out_path, 'w') as f:
         for protocol, (number, interval) in PROTOCOLS.items():
             for n_spines in SPINE_COUNTS:
-                t, ica_soma, ica_dend, ica_spine, ica_nmdar = run(n_spines,
+                t, ica_soma, ica_dend, ica_spine, ica_nmdar, v_soma = run(n_spines,
                                                                 number,
                                                                 interval)
                 grp = f.create_group('%s/%dspines' % (protocol, n_spines))
@@ -104,6 +106,7 @@ def main():
                 grp.create_dataset('ica_dend', data=ica_dend)
                 grp.create_dataset('ica_spine', data=ica_spine)
                 grp.create_dataset('ica_nmdar', data=ica_nmdar)
+                grp.create_dataset('v_soma', data=v_soma)
                 print(protocol, n_spines, 'done')
 
 

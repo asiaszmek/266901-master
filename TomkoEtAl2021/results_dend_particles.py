@@ -1,7 +1,7 @@
 import os
 import h5py
 import matplotlib.pyplot as plt
-
+F = 9.6e4
 
 FNAME = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'results.h5')
 
@@ -20,19 +20,19 @@ for i, protocol in enumerate(protocols):
         ax = axes[i, j]
         grp = f[protocol][spine_key]
         for k, x in enumerate(grp['ica_dend']):
-            ax.plot(grp['t'][:], x[:]*94.23*0.01,label=k)
+            ax.plot(grp['t'][:], abs(x[:]*94.23*3e4),label=k)
         ax.set_title(protocol + ' - ' + spine_key)
-        min_y.append(min(ax.get_ylim()))
+        min_y.append(max(ax.get_ylim()))
 
     for j in range(len(spine_keys)):
-        axes[i, j].set_ylim([min(min_y), 0])
+        axes[i, j].set_ylim([0, max(min_y)])
         if i == 2:
             ax.set_xlabel('Time (ms)')
         else:
             
             axes[i, j].set_xticks([])
         if j == 0:
-            ax.set_ylabel('ica_dend in segment (nA)')
+            ax.set_ylabel('particles/m sec')
         else:
             axes[i, j].set_yticks([])
     

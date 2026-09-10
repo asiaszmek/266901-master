@@ -19,9 +19,17 @@ for i, protocol in enumerate(protocols):
     for j, spine_key in enumerate(spine_keys):
         ax = axes[i, j]
         grp = f[protocol][spine_key]
-        for k, x in enumerate(grp['ica_dend']):
-            ax.plot(grp['t'][:], x[:]*94.23*0.01,label=k)
+        ii = 0
+        key = int(spine_key.split("spines")[0])
+      
+        for k, x in enumerate(grp['ica_spine']):
+            if k in random_pos[:int(key)]:
+                ax.plot(grp['t'][:], x[:]*0.83*0.01-grp["ica_nmdar"][ii],
+                        label=ii+1)#labels[k])
+                ii = ii+1
+      
         ax.set_title(protocol + ' - ' + spine_key)
+
         min_y.append(min(ax.get_ylim()))
 
     for j in range(len(spine_keys)):
@@ -32,7 +40,7 @@ for i, protocol in enumerate(protocols):
             
             axes[i, j].set_xticks([])
         if j == 0:
-            ax.set_ylabel('ica_dend in segment (nA)')
+            ax.set_ylabel('ica_spine (nA)')
         else:
             axes[i, j].set_yticks([])
     
