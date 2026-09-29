@@ -18,9 +18,14 @@ import pkg_resources
 import sys
 import spines
 SPINE_COUNTS = [0, 12, 18]
-WEIGHT_AMPA = 0.0008
-n_spines = 100
 
+n_spines = 100
+gAMPA = 25e-3
+AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
+
+gNMDA = gAMPA/AtoN_ratio
+
+NSPINES = 100
 
 def build_cell(Vrest):
     return h.CA1_PC_Tomko()
@@ -46,24 +51,23 @@ class ModelLoader(sciunit.Model,
     def Tomko(self):
         cell = build_cell(self.v_init)
         dend = cell.lm_medium1
-        positions = spines.add_spines(dend, n_spines)
-        heads = [positions[x][0][0] for x in positions.keys()]
-        syn_seg = dend(0.5) if n_spines == 0 else heads[0](0.5)
-        targets = [dend] if n_spines == 0 else [hd for hd in heads]
+        positions = spines.add_spines(dend, NSPINES)
+        # heads = [positions[x][0][0] for x in positions.keys()]
+        # syn_seg = dend(0.5) if n_spines == 0 else heads[0](0.5)
+        # targets = [dend] if n_spines == 0 else [hd for hd in heads]
+        # self.presynaptic = h.Section("PRE")
+        # self.release = h.depletion(self.presynaptic(0.5))
         for section in cell.all:
             spines.balance_currents(section, self.v_init)
 
-        syns, ncs, stims = [], [], []
+        # syns = []
         
-        for sec in targets:
-            spines.add_pointprocess(sec, 'Wghkampa_preML',
-                                    {'Pmax':4e-6,
-                                     'glut_factor': 40})
-            spines.add_pointprocess(sec, 'ghknmda',
-                                    {'Pmax':4.5*4e-6,
-                                     'mg':0.0001,
-                                     'mgb_k':0.22,
-                                     'Area': 1.0})
+        # for sec in targets:
+        #     ampar = spines.add_synapse_ampa(sec, gAMPA)
+        #     nmdar = spines.add_synapse_nmda(sec, gNMDA)
+        #     syns += [nmdar, ampar]
+        # for syn in syns:
+        #     h.setpointer(self.release._ref_T, 'T', syn) 
         return cell
 
     def make_a_run(self, tstop):

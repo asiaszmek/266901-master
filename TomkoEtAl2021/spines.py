@@ -1,6 +1,6 @@
 from neuron import h
 
-NECK_L, NECK_DIAM = 2.0, 0.5
+NECK_L, NECK_DIAM = .5, 0.5
 HEAD_L, HEAD_DIAM = 0.264, 1.0
 RA = 12000
 neck_Ra = 150
@@ -116,18 +116,14 @@ def add_spines(dend, n, x0=0.1, x1=0.9, neck_L=NECK_L, neck_diam=NECK_DIAM,
         compensate_for_spines(dend, positions)
     return positions
  
+def add_synapse_ampa(dend, gmax):
+    syn = h.AMPADJ(dend(0.5))
+    syn.gmax = gmax
+    return syn
 
+def add_synapse_nmda(dend, gmax, ca_per=0.05):
+    syn = h.NMDA5_CA(dend(0.5))
+    syn.fCa = ca_per
+    syn.gmax = gmax
+    return syn
 
-def add_pointprocess(section, syn_type, parameters, locations=[0.5]):
-    """
-    From Salinos et al 2019
-    """
-    synapse_group = []
-    for location in locations:
-        synapse = getattr(h, syn_type)(location, sec=section)
-        for name, value in list(parameters.items()):
-            setattr(synapse, name, value)
-        synapse_group.append(synapse)
-    if len(synapse_group) == 1:
-        synapse_group = synapse_group[0]
-    return synapse_group
