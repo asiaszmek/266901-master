@@ -17,7 +17,7 @@ if __name__ == "__main__":
     mods_path = os.path.join(".", "Mods")
     my_model = ModelLoader("Tomko")
 
-    my_model.v_init = -70
+    my_model.v_init = -65
     my_model.celsius = 34
     target_features_file = os.path.join("target_features",
                                         "feat_CA1_pyr_cACpyr_more_features.json")
@@ -66,6 +66,7 @@ if __name__ == "__main__":
     # #Summarize and print the score achieved by the model on the test using SciUnit's summarize function
     # score.summarize()
 
+   
     target_features_file = os.path.join("target_features",
                                         "feat_backpropagating_AP_target_data.json")
 
@@ -76,7 +77,7 @@ if __name__ == "__main__":
 
     with open(stim_file, 'r') as f:
         config = json.load(f, object_pairs_hook=collections.OrderedDict)
-
+        
     # Instantiate the test class
     test = tests.BackpropagatingAPTest(config=config,
                                        observation=observation,
@@ -94,6 +95,9 @@ if __name__ == "__main__":
     #Summarize and print the score achieved by the model on the test using SciUnit's summarize function
     print(score.summary)
     
+
+   
+    
     with open('target_features/depol_block_target_data.json') as f:
         observation = json.load(f,
                                 object_pairs_hook=collections.OrderedDict)
@@ -107,18 +111,18 @@ if __name__ == "__main__":
 
     print(score.summary)
 
-    with open('target_features/oblique_target_data.json') as f:
-        observation = json.load(f, object_pairs_hook=collections.OrderedDict)
-    test = tests.ObliqueIntegrationTest(observation=observation,
-                                        save_all=False, force_run_synapse=True,
-                                        force_run_bin_search=False,
-                                        show_plot=True,
-                                        base_directory=base_directory)
+    # with open('target_features/oblique_target_data.json') as f:
+    #     observation = json.load(f, object_pairs_hook=collections.OrderedDict)
+    # test = tests.ObliqueIntegrationTest(observation=observation,
+    #                                     save_all=False, force_run_synapse=True,
+    #                                     force_run_bin_search=False,
+    #                                     show_plot=True,
+    #                                     base_directory=base_directory)
 
 
-    test.npool = 10
-    score = test.judge(my_model)
-    print(score.summary)
+    # test.npool = 10
+    # score = test.judge(my_model)
+    # print(score.summary)
 
     # with open("target_features/feat_PSP_attenuation_target_data.json", 'r') as f:
     #     observation = json.load(f, object_pairs_hook=collections.OrderedDict)

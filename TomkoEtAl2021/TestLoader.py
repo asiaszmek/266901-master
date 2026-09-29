@@ -84,9 +84,9 @@ class ModelLoader(sciunit.Model,
         if name == "Tomko":
             load_mechanisms('./Mods/')
             h.xopen('pyramidal_cell_weak_bAP_updated.hoc')
-
-            self.modelpath = os.path.join(".", "Mods") 
             self.model_args = {}
+            self.modelpath = os.path.join(".", "Mods") 
+           
             self.name = name
             self.start = 150
             self.max_dist_from_soma = 150
@@ -122,7 +122,7 @@ class ModelLoader(sciunit.Model,
         else:
             return False
 
-    def initialize(self, args):
+    def initialize(self, args={}):
         save_stdout = sys.stdout
         sys.stdout = open('/dev/stdout', 'w')     
         h.load_file("stdrun.hoc")
@@ -135,7 +135,7 @@ class ModelLoader(sciunit.Model,
         except TypeError:
             self.soma = cell.soma
         self.cell = cell
-
+        
         sys.stdout = save_stdout    #setting output back to normal
         h.celsius = self.celsius
         h.fcurrent()
@@ -230,8 +230,194 @@ class ModelLoader(sciunit.Model,
                 i += 1
         return t, v_stim, v
 
+    def find_trunk_locations(self, distances, tolerance, trunk_origin):
+        self.initialize(self.model_args)
+        locations = collections.OrderedDict()
+        actual_distances = {}
 
+        for sec in self.cell.trunk_sec_list:
+            #for seg in sec:
+            if not trunk_origin:
+                h.distance(sec=self.soma)    
+                correction = self.soma.L
+            elif len(trunk_origin) == 1:
+                h.distance(sec=self.soma)
+                correction = self.soma.L*trunk_origin[0]
+            elif len(trunk_origin) == 2:
+                new_sec = self.find_sec(trunk_origin[0])
+                h.distance(sec=new_sec)
+                correction = new_sec.L*trunk_origin[1]
 
+            for seg in sec:
+                for i in range(0, len(distances)):
+                    # if this key doesn't exist it is added with the value: [],
+                    # if it exists, value not altered
+                    locations.setdefault(distances[i], [])
+                    # if the seq is between distance +- 20
+                    dist = h.distance(seg.x, sec=sec) - correction
+                    if (dist < (distances[i] + tolerance)
+                        and dist > (distances[i]- tolerance)): 
+                        locations[distances[i]].append([sec.name(),
+                                                         seg.x])
+                        actual_distances[sec.name(), seg.x] = dist
+        return locations, actual_distances
+
+    def get_random_locations(self, num, seed, dist_range, trunk_origin):
+
+        locations=[]
+        locations_distances = {}
+
+        self.initialize(self.model_args)
+        kumm_length_list = []
+        kumm_length = 0
+        num_of_secs = 0
+
+        for sec in self.cell.trunk_sec_list:
+            #print sec.L
+            num_of_secs += sec.nseg
+            kumm_length += sec.L
+            kumm_length_list.append(kumm_length)
+        #print 'kumm' ,kumm_length_list
+        #print num_of_secs
+
+        if num > num_of_secs:
+            for sec in self.cell.trunk_sec_list:
+                if not trunk_origin:
+                    h.distance(sec=self.soma)    
+                    correction = self.soma.L
+                elif len(trunk_origin) == 1:
+                    h.distance(sec=self.soma)
+                    correction = self.soma.L*trunk_origin[0]
+                elif len(trunk_origin) == 2:
+                    new_sec = self.find_sec(trunk_origin[0])
+                    h.distance(sec=new_sec)
+                for seg in sec:
+                    dist = h.distance(seg.x, sec=sec) - correction
+                    if dist > dist_range[0] and dist < dist_range[1]:  
+                        locations.append([sec.name(), seg.x])
+                        locations_distances[sec.name(), seg.x] = dist
+        else:
+            norm_kumm_length_list = [i/kumm_length_list[-1] for i in kumm_length_list]
+            import random
+
+            _num_ = num  # _num_ will be changed
+            num_iterations = 0
+            random.seed(seed)
+
+            while len(locations) < num and num_iterations < 50 :
+                #print 'seed ', seed
+                rand_list = [random.random() for j in range(_num_)]
+                #print rand_list
+
+                for rand in rand_list:
+                    #print 'RAND', rand
+                    for i in range(len(norm_kumm_length_list)):
+                        if (rand <= norm_kumm_length_list[i]
+                            and (rand > norm_kumm_length_list[i-1]
+                                 or i==0)):
+                            #print norm_kumm_length_list[i-1]
+                            #print norm_kumm_length_list[i]
+                            seg_loc = ((rand - norm_kumm_length_list[i-1]) /
+                                       (norm_kumm_length_list[i] -
+                                        norm_kumm_length_list[i-1]))
+                            #print 'seg_loc', seg_loc
+                            segs = [seg.x for seg in self.cell.trunk_sec_list[i]]
+                            d_seg = [abs(seg.x - seg_loc) for seg in
+                                     self.cell.trunk_sec_list[i]]
+                            min_d_seg = numpy.argmin(d_seg)
+                            segment = segs[min_d_seg]
+                            #print 'segment', segment
+                            if not trunk_origin:
+                                h.distance(sec=self.soma)    
+                                correction = self.soma.L
+                            elif len(trunk_origin) == 1:
+                                h.distance(sec=self.soma)
+                                correction = self.soma.L*trunk_origin[0]
+                            elif len(trunk_origin) == 2:
+                                new_sec = self.find_sec(trunk_origin[0])
+                                h.distance(sec=new_sec)
+                                correction = new_sec.L*trunk_origin[1]
+                            dist = h.distance(segment, sec=self.cell.trunk_sec_list[i]) - correction
+                            if ([self.cell.trunk_sec_list[i].name(), segment] not in locations
+                                and dist >= dist_range[0]
+                                and dist < dist_range[1]):
+                                locations.append([self.cell.trunk_sec_list[i].name(),
+                                                  segment])
+                                locations_distances[self.cell.trunk_sec_list[i].name(),
+                                                    segment] = dist
+                _num_ = num - len(locations)
+
+                seed += 10
+                num_iterations += 1
+
+        return locations, locations_distances
+
+    def find_good_obliques(self, trunk_origin):
+        """Used in ObliqueIntegrationTest"""
+        self.initialize(self.model_args)
+        dend_loc = []
+        for sec in self.cell.oblique:
+            dend_loc_prox=[]
+            dend_loc_dist=[]
+            seg_list_prox=[]
+            seg_list_dist=[]
+            
+            if not trunk_origin:
+                h.distance(sec=self.soma)    
+                correction = self.soma.L
+            elif len(trunk_origin) == 1:
+                h.distance(sec=self.soma)
+                correction = self.soma.L*trunk_origin[0]
+            elif len(trunk_origin) == 2:
+                new_sec = self.cell.find_sec(trunk_origin[0])
+                h.distance(sec=new_sec)
+                correction = new_sec.L*trunk_origin[1]
+            #set the 0 point of the section as the origin
+            for seg in sec:
+                # print(seg.x, h.distance(seg.x))
+                dist = h.distance(seg.x, sec=sec) - correction
+                if dist > 5 and dist < 50:
+                    seg_list_prox.append(seg.x)
+                if dist > 60 and dist < 126:
+                    seg_list_dist.append(seg.x)
+
+            #print seg_list_prox
+            #print seg_list_dist
+
+            if len(seg_list_prox) > 1:
+                s = int(numpy.ceil(len(seg_list_prox)/2.0))
+                dend_loc_prox.append(sec.name())
+                dend_loc_prox.append(seg_list_prox[s])
+                dend_loc_prox.append('prox')
+            elif len(seg_list_prox) == 1:
+                dend_loc_prox.append(sec.name())
+                dend_loc_prox.append(seg_list_prox[0])
+                dend_loc_prox.append('prox')
+
+            if len(seg_list_dist) > 1:
+                s = int(numpy.ceil(len(seg_list_dist)/2.0)-1)
+                dend_loc_dist.append(sec.name())
+                dend_loc_dist.append(seg_list_dist[s])
+                dend_loc_dist.append('dist')
+            elif len(seg_list_dist) == 1:
+                dend_loc_dist.append(sec.name())
+                dend_loc_dist.append(seg_list_dist[0])
+                dend_loc_dist.append('dist')
+            elif len(seg_list_dist) == 0:                # if the dendrite is not long enough to meet the criteria, we stimulate its end
+                dend_loc_dist.append(sec.name())
+                dend_loc_dist.append(0.9)
+                dend_loc_dist.append('dist')
+
+            if dend_loc_prox:
+                dend_loc.append(dend_loc_prox)
+            if dend_loc_dist:
+                dend_loc.append(dend_loc_dist)
+
+        #print 'Dendrites and locations to be tested: ', dend_loc
+
+        return dend_loc
+
+    
     def set_netstim_netcon(self, interval, number):
 
         self.presynaptic = []
@@ -358,3 +544,4 @@ class ModelLoader(sciunit.Model,
 
         return t, v, v_dend
 
+ 
