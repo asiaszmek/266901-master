@@ -17,9 +17,7 @@ import json
 import pkg_resources
 import sys
 import spines
-SPINE_COUNTS = [0, 12, 18]
 
-n_spines = 100
 gAMPA = 25e-3
 AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
@@ -31,6 +29,74 @@ def build_cell(Vrest):
     return h.CA1_PC_Tomko()
 
 
+def find_sec(cell, name):
+    for sec in cell.all:
+        if name in sec.name():
+            return sec
+
+
+def find_go(my_model, trunk_origin):
+    dend_loc = []
+    try:
+        soma = my_model.soma[0]
+    except TypeError:
+        soma = my_model.soma
+    for sec in my_model.oblique_sec_list:
+        dend_loc_prox=[]
+        dend_loc_dist=[]
+        seg_list_prox=[]
+        seg_list_dist=[]
+            
+        if not trunk_origin:
+            h.distance(sec=soma)    
+            correction = soma.L
+        elif len(trunk_origin) == 1:
+            h.distance(sec=soma)
+            correction = soma.L*trunk_origin[0]
+        elif len(trunk_origin) == 2:
+            new_sec = find_sec(my_model, trunk_origin[0])
+            h.distance(sec=new_sec)
+            correction = new_sec.L*trunk_origin[1]
+        #set the 0 point of the section as the origin
+        for seg in sec:
+            dist = h.distance(seg.x, sec=sec) - correction
+            if dist > 5 and dist < 50:
+                seg_list_prox.append(seg.x)
+            if dist > 60 and dist < 126:
+                seg_list_dist.append(seg.x)
+
+        if len(seg_list_prox) > 1:
+            s = int(numpy.ceil(len(seg_list_prox)/2.0))
+            dend_loc_prox.append(sec.name())
+            dend_loc_prox.append(seg_list_prox[s])
+            dend_loc_prox.append('prox')
+        elif len(seg_list_prox) == 1:
+            dend_loc_prox.append(sec.name())
+            dend_loc_prox.append(seg_list_prox[0])
+            dend_loc_prox.append('prox')
+
+        if len(seg_list_dist) > 1:
+            s = int(numpy.ceil(len(seg_list_dist)/2.0)-1)
+            dend_loc_dist.append(sec.name())
+            dend_loc_dist.append(seg_list_dist[s])
+            dend_loc_dist.append('dist')
+        elif len(seg_list_dist) == 1:
+            dend_loc_dist.append(sec.name())
+            dend_loc_dist.append(seg_list_dist[0])
+            dend_loc_dist.append('dist')
+        elif len(seg_list_dist) == 0:                # if the dendrite is not long enough to meet the criteria, we stimulate its end
+            dend_loc_dist.append(sec.name())
+            dend_loc_dist.append(0.9)
+            dend_loc_dist.append('dist')
+
+        if dend_loc_prox:
+            dend_loc.append(dend_loc_prox)
+        if dend_loc_dist:
+            dend_loc.append(dend_loc_dist)
+
+    #print('Dendrites and locations to be tested: ', dend_loc)
+
+    return dend_loc
 class ModelLoader(sciunit.Model,
                  cap.ProvidesGoodObliques,
                  cap.ReceivesSquareCurrent_ProvidesResponse,
@@ -86,6 +152,8 @@ class ModelLoader(sciunit.Model,
             h.xopen('pyramidal_cell_weak_bAP_updated.hoc')
             self.model_args = {}
             self.modelpath = os.path.join(".", "Mods") 
+            self.AMPA_name = "AMPA5"
+            self.NMDA_name = "NMDA5_CA"
            
             self.name = name
             self.start = 150
@@ -147,7 +215,7 @@ class ModelLoader(sciunit.Model,
         self.initialize(self.model_args)
         stim_s_name = self.translate(section_stim, distance=0)
         rec_sec_name = self.translate(section_rec, distance=0)
-        new_sec = self.find_sec(stim_s_name)
+        new_sec = find_sec(self.cell, stim_s_name)
         self.sect_loc_stim = new_sec(float(loc_stim))
         print("- running amplitude: %f on model: %s at: %s(%s)" % (amp,
                                                                    self.name,
@@ -158,7 +226,7 @@ class ModelLoader(sciunit.Model,
         self.stim.amp = amp
         self.stim.delay = delay
         self.stim.dur = dur
-        new_sec = self.find_sec(rec_sec_name)
+        new_sec = find_sec(self.cell, rec_sec_name)
         self.sect_loc_rec = new_sec(float(loc_rec))
         rec_t = h.Vector()
         rec_t.record(h._ref_t)
@@ -178,7 +246,7 @@ class ModelLoader(sciunit.Model,
 
 
         stim_s_name = self.translate(section_stim, distance=0)
-        new_sec = self.find_sec(stim_s_name)
+        new_sec = find_sec(self.cell, stim_s_name)
         self.sect_loc_stim = new_sec(float(loc_stim))
         self.sect_loc_rec = new_sec(float(loc_stim))
         print("- running amplitude: %f on model: %s at: %s(%s)" % (amp,
@@ -202,10 +270,9 @@ class ModelLoader(sciunit.Model,
         v = collections.OrderedDict()
         self.dend_loc_rec =[]
 
-        #print dend_locations
         for key, value in dend_locations.items():
             for x in value:
-                new_sec = self.find_sec(x[0])
+                new_sec = find_sec(self.cell, x[0])
                 self.dend_loc_rec.append(new_sec(x[1]))
                 rec_v.append(h.Vector())
 
@@ -244,7 +311,7 @@ class ModelLoader(sciunit.Model,
                 h.distance(sec=self.soma)
                 correction = self.soma.L*trunk_origin[0]
             elif len(trunk_origin) == 2:
-                new_sec = self.find_sec(trunk_origin[0])
+                new_sec = find_sec(self.cell, trunk_origin[0])
                 h.distance(sec=new_sec)
                 correction = new_sec.L*trunk_origin[1]
 
@@ -273,12 +340,9 @@ class ModelLoader(sciunit.Model,
         num_of_secs = 0
 
         for sec in self.cell.trunk_sec_list:
-            #print sec.L
             num_of_secs += sec.nseg
             kumm_length += sec.L
             kumm_length_list.append(kumm_length)
-        #print 'kumm' ,kumm_length_list
-        #print num_of_secs
 
         if num > num_of_secs:
             for sec in self.cell.trunk_sec_list:
@@ -289,7 +353,7 @@ class ModelLoader(sciunit.Model,
                     h.distance(sec=self.soma)
                     correction = self.soma.L*trunk_origin[0]
                 elif len(trunk_origin) == 2:
-                    new_sec = self.find_sec(trunk_origin[0])
+                    new_sec = find_sec(self.cell, trunk_origin[0])
                     h.distance(sec=new_sec)
                 for seg in sec:
                     dist = h.distance(seg.x, sec=sec) - correction
@@ -334,7 +398,7 @@ class ModelLoader(sciunit.Model,
                                 h.distance(sec=self.soma)
                                 correction = self.soma.L*trunk_origin[0]
                             elif len(trunk_origin) == 2:
-                                new_sec = self.find_sec(trunk_origin[0])
+                                new_sec = find_sec(self.cell, trunk_origin[0])
                                 h.distance(sec=new_sec)
                                 correction = new_sec.L*trunk_origin[1]
                             dist = h.distance(segment, sec=self.cell.trunk_sec_list[i]) - correction
@@ -354,68 +418,9 @@ class ModelLoader(sciunit.Model,
 
     def find_good_obliques(self, trunk_origin):
         """Used in ObliqueIntegrationTest"""
+
         self.initialize(self.model_args)
-        dend_loc = []
-        for sec in self.cell.oblique:
-            dend_loc_prox=[]
-            dend_loc_dist=[]
-            seg_list_prox=[]
-            seg_list_dist=[]
-            
-            if not trunk_origin:
-                h.distance(sec=self.soma)    
-                correction = self.soma.L
-            elif len(trunk_origin) == 1:
-                h.distance(sec=self.soma)
-                correction = self.soma.L*trunk_origin[0]
-            elif len(trunk_origin) == 2:
-                new_sec = self.cell.find_sec(trunk_origin[0])
-                h.distance(sec=new_sec)
-                correction = new_sec.L*trunk_origin[1]
-            #set the 0 point of the section as the origin
-            for seg in sec:
-                # print(seg.x, h.distance(seg.x))
-                dist = h.distance(seg.x, sec=sec) - correction
-                if dist > 5 and dist < 50:
-                    seg_list_prox.append(seg.x)
-                if dist > 60 and dist < 126:
-                    seg_list_dist.append(seg.x)
-
-            #print seg_list_prox
-            #print seg_list_dist
-
-            if len(seg_list_prox) > 1:
-                s = int(numpy.ceil(len(seg_list_prox)/2.0))
-                dend_loc_prox.append(sec.name())
-                dend_loc_prox.append(seg_list_prox[s])
-                dend_loc_prox.append('prox')
-            elif len(seg_list_prox) == 1:
-                dend_loc_prox.append(sec.name())
-                dend_loc_prox.append(seg_list_prox[0])
-                dend_loc_prox.append('prox')
-
-            if len(seg_list_dist) > 1:
-                s = int(numpy.ceil(len(seg_list_dist)/2.0)-1)
-                dend_loc_dist.append(sec.name())
-                dend_loc_dist.append(seg_list_dist[s])
-                dend_loc_dist.append('dist')
-            elif len(seg_list_dist) == 1:
-                dend_loc_dist.append(sec.name())
-                dend_loc_dist.append(seg_list_dist[0])
-                dend_loc_dist.append('dist')
-            elif len(seg_list_dist) == 0:                # if the dendrite is not long enough to meet the criteria, we stimulate its end
-                dend_loc_dist.append(sec.name())
-                dend_loc_dist.append(0.9)
-                dend_loc_dist.append('dist')
-
-            if dend_loc_prox:
-                dend_loc.append(dend_loc_prox)
-            if dend_loc_dist:
-                dend_loc.append(dend_loc_dist)
-
-        #print 'Dendrites and locations to be tested: ', dend_loc
-
-        return dend_loc
+        return find_go(self.cell, trunk_origin=trunk_origin)
 
     
     def set_netstim_netcon(self, interval, number):
@@ -443,7 +448,7 @@ class ModelLoader(sciunit.Model,
         args["spine_pos"][dend_loc[0]] = [dend_loc[1]]
         args["where_spines"] = [dend_loc[0]]
         self.initialise(args)
-        self.dendrite = self.find_sec(dend_loc[0])
+        self.dendrite = find_sec(self.cell, dend_loc[0])
         self.set_netstim_netcon(interval, 1)
         self.set_num_weight(0, 1, 1)
 
@@ -483,7 +488,8 @@ class ModelLoader(sciunit.Model,
         self.initialize(args)
         
 
-        self.dendrite = self.find_sec(dend_loc[0])
+        my_dend_loc = dend_loc[0]
+        self.dendrite = find_sec(self.cell, dend_loc[0])
         self.xloc = dend_loc[1]
 
         self.set_netstim_netcon(interval, number)
@@ -522,7 +528,7 @@ class ModelLoader(sciunit.Model,
         self.set_netstim_netcon(0, 1)
  
         self.sect_loc = self.soma(0.5)
-        self.dendrite = self.find_sec(dend_loc[0])
+        self.dendrite = find_sec(self.cell, dend_loc[0])
         self.xloc = dend_loc[1]
         # initiate recording
         rec_t = h.Vector()
