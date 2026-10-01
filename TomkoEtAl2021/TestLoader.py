@@ -108,32 +108,39 @@ class ModelLoader(sciunit.Model,
                  cap.ReceivesEPSCstim):
 
 
-    def find_sec(self, name):
-        for sec in self.cell.all:
-            if name in sec.name():
-                return sec
             
         
     def Tomko(self):
         cell = build_cell(self.v_init)
-        dend = cell.lm_medium1
-        positions = spines.add_spines(dend, NSPINES)
-        # heads = [positions[x][0][0] for x in positions.keys()]
-        # syn_seg = dend(0.5) if n_spines == 0 else heads[0](0.5)
-        # targets = [dend] if n_spines == 0 else [hd for hd in heads]
-        # self.presynaptic = h.Section("PRE")
-        # self.release = h.depletion(self.presynaptic(0.5))
-        for section in cell.all:
+    
+        for dend in [cell.rad_t1, cell.rad_t2, cell.rad_t3]:
+            self.positions[dend.name()] = spines.add_spines(dend, NSPINES)
+            # if NSPINES % 2:
+            #     dend.nseg = NSPINES
+            # else:
+            #     dend.nseg = NSPINES+1
+        for section in h.allsec():
             spines.balance_currents(section, self.v_init)
-
-        # syns = []
         
-        # for sec in targets:
-        #     ampar = spines.add_synapse_ampa(sec, gAMPA)
-        #     nmdar = spines.add_synapse_nmda(sec, gNMDA)
-        #     syns += [nmdar, ampar]
-        # for syn in syns:
-        #     h.setpointer(self.release._ref_T, 'T', syn) 
+        dend_locs = find_go(cell, None)
+
+        for sec_name, syn_loc, term in dend_locs:
+            spine_pos = list(self.positions[sec_name].keys())
+            which_spine = numpy.argmin(numpy.abs(numpy.array(spine_pos)-syn_loc))
+            #add synapse
+
+            for i in range(5):
+                try:
+                    my_head = self.positions[sec_name][spine_pos[which_spine+1]][0][0]
+                except IndexError:
+                    my_head = self.positions[sec_name][spine_pos[which_spine-1]][0][0]
+                if sec_name not in self.ampars:
+                    self.ampars[sec_name] = []
+                    self.nmdars[sec_name] = []
+                else:
+                    self.ampars[sec_name].append(spines.add_synapse_ampa(my_head, gAMPA))
+                    self.nmdars[sec_name].append(spines.add_synapse_nmda(my_head, gNMDA))
+           
         return cell
 
     def make_a_run(self, tstop):
@@ -154,6 +161,9 @@ class ModelLoader(sciunit.Model,
             self.modelpath = os.path.join(".", "Mods") 
             self.AMPA_name = "AMPA5"
             self.NMDA_name = "NMDA5_CA"
+            self.ampars = {}
+            self.nmdars = {}
+            self.positions = {}
            
             self.name = name
             self.start = 150
@@ -369,28 +379,24 @@ class ModelLoader(sciunit.Model,
             random.seed(seed)
 
             while len(locations) < num and num_iterations < 50 :
-                #print 'seed ', seed
                 rand_list = [random.random() for j in range(_num_)]
-                #print rand_list
 
                 for rand in rand_list:
-                    #print 'RAND', rand
                     for i in range(len(norm_kumm_length_list)):
                         if (rand <= norm_kumm_length_list[i]
                             and (rand > norm_kumm_length_list[i-1]
                                  or i==0)):
-                            #print norm_kumm_length_list[i-1]
-                            #print norm_kumm_length_list[i]
+
                             seg_loc = ((rand - norm_kumm_length_list[i-1]) /
                                        (norm_kumm_length_list[i] -
                                         norm_kumm_length_list[i-1]))
-                            #print 'seg_loc', seg_loc
+
                             segs = [seg.x for seg in self.cell.trunk_sec_list[i]]
                             d_seg = [abs(seg.x - seg_loc) for seg in
                                      self.cell.trunk_sec_list[i]]
                             min_d_seg = numpy.argmin(d_seg)
                             segment = segs[min_d_seg]
-                            #print 'segment', segment
+
                             if not trunk_origin:
                                 h.distance(sec=self.soma)    
                                 correction = self.soma.L
