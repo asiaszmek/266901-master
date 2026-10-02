@@ -25,9 +25,16 @@ gNMDA = gAMPA/AtoN_ratio
 
 NSPINES = 100
 
-def build_cell(Vrest):
-    return h.CA1_PC_Tomko()
 
+def add_synapse_ampa(dend, gmax):
+    syn = h.Wghkampa_preML(dend(0.5))
+    syn.Pmax = gmax
+    return syn
+
+def add_synapse_nmda(dend, gmax):
+    syn = h.ghknmda(dend(0.5))   
+    syn.Pmax = gmax
+    return syn
 
 def find_sec(cell, name):
     for sec in cell.all:
@@ -97,6 +104,9 @@ def find_go(my_model, trunk_origin):
     #print('Dendrites and locations to be tested: ', dend_loc)
 
     return dend_loc
+
+
+
 class ModelLoader(sciunit.Model,
                  cap.ProvidesGoodObliques,
                  cap.ReceivesSquareCurrent_ProvidesResponse,
@@ -109,80 +119,68 @@ class ModelLoader(sciunit.Model,
 
 
             
-        
-    def Tomko(self):
-        cell = build_cell(self.v_init)
-    
-        for dend in [cell.rad_t1, cell.rad_t2, cell.rad_t3]:
-            self.positions[dend.name()] = spines.add_spines(dend, NSPINES)
-            # if NSPINES % 2:
-            #     dend.nseg = NSPINES
-            # else:
-            #     dend.nseg = NSPINES+1
-        for section in h.allsec():
-            spines.balance_currents(section, self.v_init)
-        
-        dend_locs = find_go(cell, None)
-
-        for sec_name, syn_loc, term in dend_locs:
-            spine_pos = list(self.positions[sec_name].keys())
-            which_spine = numpy.argmin(numpy.abs(numpy.array(spine_pos)-syn_loc))
-            #add synapse
-
-            for i in range(5):
-                try:
-                    my_head = self.positions[sec_name][spine_pos[which_spine+1]][0][0]
-                except IndexError:
-                    my_head = self.positions[sec_name][spine_pos[which_spine-1]][0][0]
-                if sec_name not in self.ampars:
-                    self.ampars[sec_name] = []
-                    self.nmdars[sec_name] = []
-                else:
-                    self.ampars[sec_name].append(spines.add_synapse_ampa(my_head, gAMPA))
-                    self.nmdars[sec_name].append(spines.add_synapse_nmda(my_head, gNMDA))
-           
-        return cell
-
-    def make_a_run(self, tstop):
-      h.CVode().re_init()
-      h.finitialize(self.v_init)
-      h.fcurrent()
-      h.tstop = tstop
-      h.run(tstop)
-            
-    def __init__(self, name="Tomko"):
+    def __init__(self, hocpath='pyramidal_cell_weak_bAP_updated.hoc',
+                 name="CA1_PC_Tomko", cvode=True):
         """ Constructor. """
 
         """ This class should be used with Jupyter notebooks"""
-        if name == "Tomko":
-            load_mechanisms('./Mods/')
-            h.xopen('pyramidal_cell_weak_bAP_updated.hoc')
-            self.model_args = {}
-            self.modelpath = os.path.join(".", "Mods") 
-            self.AMPA_name = "AMPA5"
-            self.NMDA_name = "NMDA5_CA"
-            self.ampars = {}
-            self.nmdars = {}
-            self.positions = {}
-           
-            self.name = name
-            self.start = 150
-            self.max_dist_from_soma = 150
-            self.v_init = -65
-            self.celsius = 34
-            self.c_step_start = 0.00004
-            self.c_step_stop = 0.000004
-            self.c_minmax = numpy.array([0.00004, 0.04])
-            self.threshold = -20
-            self.stim = None
-            self.soma = None
-            
-            sciunit.Model.__init__(self, name=self.name)
-            self.dend_loc = []  
-            self.dend_locations = collections.OrderedDict()
-            self.base_directory = './validation_results/'   
-            self.compile_mod_files()
 
+        load_mechanisms('./Mods/')
+        self.hocpath = hocpath
+        
+        self.model_args = {}
+        self.cvode_active = cvode
+        self.max_dist_from_soma = 150
+        self.modelpath = os.path.join(".", "Mods") 
+        self.AMPA_name = "AMPA5"
+        self.NMDA_name = "NMDA5_CA"
+        self.presynaptic = {}
+        self.release = {}
+        self.nc_list = {}
+        self.ns_list = {}
+        self.ampars = {}
+        self.nmdars = {}
+        self.libpath = 'x86_64/.libs/libnrnmech.so'
+        self.name = name
+        self.start = 150
+        self.max_dist_from_soma = 150
+        self.v_init = -65
+        self.celsius = 34
+        self.dt = 0.025
+        self.c_step_start = 0.00004
+        self.c_step_stop = 0.000004
+        self.c_minmax = numpy.array([0.00004, 0.04])
+        self.threshold = -20
+        self.stim = None
+        self.soma = None
+            
+        sciunit.Model.__init__(self, name=self.name)
+        self.dend_loc = []  
+        self.dend_locations = collections.OrderedDict()
+        self.base_directory = './validation_results/'   
+        self.compile_mod_files()
+        self.ampars = {}
+        self.nmdars = {}
+        self.positions = {}
+
+
+    def add_synapses(self, dend_locs):
+        sec_name, syn_loc, term = dend_locs
+        spine_pos = list(self.positions[sec_name].keys())
+        which_spine = numpy.argmin(numpy.abs(numpy.array(spine_pos)-syn_loc))
+        #add synapse
+
+        for i in range(5):
+            try:
+                my_head = self.positions[sec_name][spine_pos[which_spine+1]][0][0]
+            except IndexError:
+                my_head = self.positions[sec_name][spine_pos[which_spine-1]][0][0]
+            if sec_name not in self.ampars:
+                self.ampars[sec_name] = []
+                self.nmdars[sec_name] = []
+            self.ampars[sec_name].append(add_synapse_ampa(my_head, gAMPA))
+            self.nmdars[sec_name].append(add_synapse_nmda(my_head, gNMDA))
+            
     def compile_mod_files(self):
         if self.modelpath is None:
             raise Exception("""Please give the path to the mod files (eg. mod_files_path = \'/home/models/CA1_pyr/mechanisms/\') 
@@ -200,29 +198,42 @@ class ModelLoader(sciunit.Model,
         else:
             return False
 
+
+    def load_mod_files(self):
+        h.nrn_load_dll(str(self.modelpath + self.libpath))
+        
     def initialize(self, args={}):
         save_stdout = sys.stdout
-        sys.stdout = open('/dev/stdout', 'w')     
-        h.load_file("stdrun.hoc")
-        h.CVode().active(True)
-        h.finitialize(self.v_init)
-        h.fcurrent()
-        cell = self.Tomko()
-        try:
-            self.soma = cell.soma[0]
-        except TypeError:
-            self.soma = cell.soma
-        self.cell = cell
+        sys.stdout = open('/dev/stdout', 'w')
+        self.load_mod_files()
+        if self.hocpath is None:
+            raise Exception("Please give the path to the hoc file (eg. model.modelpath = \"/home/models/CA1_pyr/CA1_pyr_model.hoc\")")
+
+        sys.stdout=save_stdout
+
+        h.xopen(str(self.hocpath))
+        h.load_file("stdrun.hoc")     
+      
+        self.cell = h.CA1_PC_Tomko()
+        for dend in [self.cell.rad_t1, self.cell.rad_t2, self.cell.rad_t3]:
+            self.positions[dend.name()] = spines.add_spines(dend, NSPINES)
+        for section in h.allsec():
+            spines.balance_currents(section, self.v_init)
+        self.soma = self.cell.soma[0]
         
         sys.stdout = save_stdout    #setting output back to normal
         h.celsius = self.celsius
-        h.fcurrent()
-        return cell
+        
+       
 
     def inject_current(self, amp, delay, dur, section_stim,
                        loc_stim, section_rec, loc_rec):
 
-        self.initialize(self.model_args)
+        self.initialize()
+        if self.cvode_active:
+            h.cvode_active(1)
+        else:
+            h.cvode_active(0)
         stim_s_name = self.translate(section_stim, distance=0)
         rec_sec_name = self.translate(section_rec, distance=0)
         new_sec = find_sec(self.cell, stim_s_name)
@@ -243,7 +254,15 @@ class ModelLoader(sciunit.Model,
         rec_v = h.Vector()
         rec_v.record(self.sect_loc_rec._ref_v)
         tstop = delay + dur + 200
-        self.make_a_run(tstop)
+        h.stdinit()
+        h.dt = self.dt
+        h.steps_per_ms = 1/self.dt
+        h.v_init = self.v_init#-65
+        h.celsius = self.celsius
+        h.init()
+        tstop = delay + dur + 200
+        h.continuerun(tstop)
+        
         t = numpy.array(rec_t)
         v = numpy.array(rec_v)
         return t, v
@@ -252,7 +271,11 @@ class ModelLoader(sciunit.Model,
                                                    dur, section_stim,
                                                    loc_stim,
                                                    dend_locations):
-        self.initialize(self.model_args)
+        self.initialize()
+        if self.cvode_active:
+            h.cvode_active(1)
+        else:
+            h.cvode_active(0)
 
 
         stim_s_name = self.translate(section_stim, distance=0)
@@ -290,7 +313,13 @@ class ModelLoader(sciunit.Model,
             rec_v[i].record(sec._ref_v)
 
         tstop = delay + dur + 200
-        self.make_a_run(tstop)
+        h.stdinit()
+        h.dt = self.dt
+        h.steps_per_ms = 1/self.dt
+        h.v_init = self.v_init#-65
+        h.celsius = self.celsius
+        h.init()
+        h.continuerun(tstop)
 
         t = numpy.array(rec_t)
         v_stim = numpy.array(rec_v_stim)
@@ -308,7 +337,12 @@ class ModelLoader(sciunit.Model,
         return t, v_stim, v
 
     def find_trunk_locations(self, distances, tolerance, trunk_origin):
-        self.initialize(self.model_args)
+        self.initialize()
+        if self.cvode_active:
+            h.cvode_active(1)
+        else:
+            h.cvode_active(0)
+
         locations = collections.OrderedDict()
         actual_distances = {}
 
@@ -344,7 +378,9 @@ class ModelLoader(sciunit.Model,
         locations=[]
         locations_distances = {}
 
-        self.initialize(self.model_args)
+        self.initialize()
+      
+
         kumm_length_list = []
         kumm_length = 0
         num_of_secs = 0
@@ -425,27 +461,26 @@ class ModelLoader(sciunit.Model,
     def find_good_obliques(self, trunk_origin):
         """Used in ObliqueIntegrationTest"""
 
-        self.initialize(self.model_args)
+        self.initialize()
+        
         return find_go(self.cell, trunk_origin=trunk_origin)
 
-    
-    def set_netstim_netcon(self, interval, number):
-
-        self.presynaptic = []
-        self.release = []
-        self.nc_list = []
-        self.ns_list = []
+    def set_netstim_netcon(self, dend_loc, interval, number):
+        if dend_loc not in self.presynaptic:
+            self.presynaptic[dend_loc] = []
+        if dend_loc not in self.release:
+            self.release[dend_loc] = []
+        if dend_loc not in self.ns_list:
+            self.ns_list[dend_loc] = []
+        if dend_loc not in self.nc_list:
+            self.nc_list[dend_loc] = []
+        
         for i in range(number):
-            self.presynaptic.append(h.Section("PRE_%d" % i))
-            self.release.append(h.depletion(self.presynaptic[i](0.5)))
-        for i in range(number):
-            self.ns_list.append(h.NetStim())
-            self.ns_list[i].number = 1
-            self.ns_list[i].start = self.start + (i*interval)
-            self.nc_list.append(h.NetCon(self.ns_list[i], self.release[i], 0, 0, 1))
-            h.setpointer(self.release[i]._ref_T, 'T', self.ampas[i])
-            if len(self.nmdas):
-                h.setpointer(self.release[i]._ref_T, 'T', self.nmdas[i]) 
+            self.ns_list[dend_loc].append(h.NetStim())
+            self.ns_list[dend_loc][i].number = 1
+            self.ns_list[dend_loc][i].start = self.start + (i*interval)
+            self.nc_list[dend_loc].append(h.NetCon(self.ns_list[dend_loc][i], self.ampars[dend_loc][i], 0, 0, 1))
+            self.nc_list[dend_loc].append(h.NetCon(self.ns_list[dend_loc][i], self.nmdars[dend_loc][i], 0, 0, 1))
 
     def run_syn(self, dend_loc, interval, number, AMPA_weight):
         """Currently not used - Used to be used in ObliqueIntegrationTest"""
@@ -453,7 +488,11 @@ class ModelLoader(sciunit.Model,
         args["spine_pos"] = {}
         args["spine_pos"][dend_loc[0]] = [dend_loc[1]]
         args["where_spines"] = [dend_loc[0]]
-        self.initialise(args)
+        self.initialise()
+        if self.cvode_active:
+            h.cvode_active(1)
+        else:
+            h.cvode_active(0)
         self.dendrite = find_sec(self.cell, dend_loc[0])
         self.set_netstim_netcon(interval, 1)
         self.set_num_weight(0, 1, 1)
@@ -471,7 +510,13 @@ class ModelLoader(sciunit.Model,
         rec_v_dend.record(self.dendrite(self.xloc)._ref_v)
 
         tstop = 500
-        self.make_a_run(tstop)
+        h.stdinit()
+        h.dt = self.dt
+        h.steps_per_ms = 1/self.dt
+        h.v_init = self.v_init#-65
+        h.celsius = self.celsius
+        h.init()
+        h.continuerun(tstop)
 
         # get recordings
         t = numpy.array(rec_t)
@@ -485,20 +530,20 @@ class ModelLoader(sciunit.Model,
         """Used in ObliqueIntegrationTest"""
         self.start = 300
         args = self.model_args
-        args["spine_pos"] = {}
-        args["spine_pos"][dend_loc[0]] = []
-        dx = 1/150
-        for i in range(number):
-            args["spine_pos"][dend_loc[0]].append(dend_loc[1]+i*dx)
-        args["where_spines"] = [dend_loc[0]]
-        self.initialize(args)
-        
+        self.initialize()
+        if self.cvode_active:
+            h.cvode_active(1)
+        else:
+            h.cvode_active(0)
+        print(dend_loc)
+        self.add_synapses(dend_loc)
 
         my_dend_loc = dend_loc[0]
         self.dendrite = find_sec(self.cell, dend_loc[0])
         self.xloc = dend_loc[1]
-
-        self.set_netstim_netcon(interval, number)
+        print(self.xloc)
+        print(my_dend_loc)
+        self.set_netstim_netcon(my_dend_loc, interval, number)
         self.sect_loc = self.soma(0.5)
 
         # initiate recording
@@ -512,8 +557,15 @@ class ModelLoader(sciunit.Model,
         rec_v_dend.record(self.dendrite(self.xloc)._ref_v)
 
         tstop = 500
-        self.make_a_run(tstop)
-
+        print("Make a run")
+        h.stdinit()
+        h.dt = self.dt
+        h.steps_per_ms = 1/self.dt
+        h.v_init = self.v_init#-65
+        h.celsius = self.celsius
+        h.init()
+        h.continuerun(tstop)
+        print("stop the run")
         # get recordings
         t = numpy.array(rec_t)
         v = numpy.array(rec_v)
@@ -547,7 +599,13 @@ class ModelLoader(sciunit.Model,
         rec_v_dend.record(self.dendrite(self.xloc)._ref_v)
 
         tstop = 450
-        self.make_a_run(tstop)
+        h.stdinit()
+        h.dt = self.dt
+        h.steps_per_ms = 1/self.dt
+        h.v_init = self.v_init#-65
+        h.celsius = self.celsius
+        h.init()
+        h.continuerun(tstop)
 
         # get recordings
         t = numpy.array(rec_t)

@@ -1,9 +1,9 @@
 from neuron import h
 
-NECK_L, NECK_DIAM = .5, 0.5
+NECK_L, NECK_DIAM = .5, 0.25
 HEAD_L, HEAD_DIAM = 0.264, 1.0
 RA = 12000
-neck_Ra = 150
+neck_Ra = 12000
 CM = 1.4
 G_PAS = 9.03e-5
 E_PAS = -65.0
@@ -122,7 +122,7 @@ def add_synapse_ampa(dend, gmax):
     return syn
 
 def add_synapse_nmda(dend, gmax, ca_per=0.05):
-    syn = h.NMDA5_CA(dend(0.5))
+    syn = h.NMDA5_CA(dend(0.5))    #   .ghknmda(dend(0.5))
     syn.fCa = ca_per
     syn.gmax = gmax
     return syn
