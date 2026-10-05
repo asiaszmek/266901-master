@@ -1,42 +1,60 @@
 import os
 import h5py
 import matplotlib.pyplot as plt
-F = 9.6e4
+area = {}
+area["ica_dend_rad_t2"] = 471
+area["ica_dend_rad_t1"] = 471
+area["ica_dend_rad_t3"] = 471
+area["ica_dend_lm_medium1"] = 94
 
 FNAME = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'results.h5')
 
 f = h5py.File(FNAME, 'r')
 
 protocols = list(f.keys())
+stim_spines = list(f[protocols[0]].keys())
 spine_keys = sorted(f[protocols[0]].keys(), key=lambda s: int(s.replace('spines', '')))
+dend_keys = []
+for key in f[protocols[0]][stim_spines[0]].keys():
+    if key.startswith("ica_dend"):
+        dend_keys.append(key)
 
-fig, axes = plt.subplots(len(protocols), len(spine_keys), figsize=(5 * len(spine_keys), 4 * len(protocols)))
-random_pos = [17, 72, 97, 8, 32, 15, 63, 57, 60, 83, 48, 26, 12, 62, 3, 49, 55, 77]
 
-for i, protocol in enumerate(protocols):
+figs, axes = [], []
 
-    min_y = []
-    for j, spine_key in enumerate(spine_keys):
-        ax = axes[i, j]
-        grp = f[protocol][spine_key]
-        for k, x in enumerate(grp['ica_dend']):
-            ax.plot(grp['t'][:], abs(x[:]*94.23*3e4),label=k)
-        ax.set_title(protocol + ' - ' + spine_key)
-        min_y.append(max(ax.get_ylim()))
+for dend in dend_keys:
+    fig, ax = plt.subplots(len(protocols), len(spine_keys), figsize=(5 * len(spine_keys), 4 * len(protocols)))
+    figs.append(fig)
+    axes.append(ax)
 
-    for j in range(len(spine_keys)):
-        axes[i, j].set_ylim([0, max(min_y)])
-        if i == 2:
-            ax.set_xlabel('Time (ms)')
-        else:
+
+for l, dend_key in enumerate(dend_keys):
+    figs[l].suptitle(dend_key)
+    for i, protocol in enumerate(protocols):
+
+        max_y = []
+        for j, spine_key in enumerate(spine_keys):
+            ax = axes[l][i, j]
+            grp = f[protocol][spine_key]
+
+            for k, x in enumerate(grp[dend_key]):
+                ax.plot(grp['t'][:], abs(x[:]*area[dend_key]*3e4), label=k)
+                ax.set_title(protocol + ' - ' + spine_key)
+                max_y.append(max(ax.get_ylim()))
+
+        for j in range(len(spine_keys)):
+            axes[l][i, j].set_ylim([0, max(max_y)])
+            if i == 2:
+                ax.set_xlabel('Time (ms)')
+            else:
             
-            axes[i, j].set_xticks([])
-        if j == 0:
-            ax.set_ylabel('particles/m sec')
-        else:
-            axes[i, j].set_yticks([])
+                pass
+            if j == 0:
+                ax.set_ylabel('ica_dend in segment (nA)')
+            else:
+                axes[l][i, j].set_yticks([])
     
-axes[-1, -1].legend()
+#axes[0][-1, -1].legend()
 plt.tight_layout()
 plt.show()
 

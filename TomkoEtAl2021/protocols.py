@@ -10,7 +10,7 @@ AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
 gNMDA = gAMPA/AtoN_ratio
 
-SPINE_COUNTS = [1, 2, 3, 4,5, 10, 11,  12, 15, 18]
+SPINE_COUNTS = [1, 2, 3, 4, 5, 10, 11,  12, 15, 18]
 PROTOCOLS = {
     '1EPSP': (1, 10.0),
     '4EPSP_100Hz': (4, 10.0),
@@ -23,14 +23,9 @@ TAIL = 300.0
 Vrest = -65
 NSPINES = 100
 
-load_mechanisms('./Mods/')
-h.xopen('pyramidal_cell_weak_bAP_original.hoc')
 
 
-def build_cell():
-    cell = h.CA1_PC_Tomko()
-    
-    return cell
+
 
 
 def add_stim(syn, pairings, inter, start, w):
@@ -44,87 +39,98 @@ def add_stim(syn, pairings, inter, start, w):
 
 
 
-def run(n_spines, number, interval):
-    cell = build_cell()
-    PRE = h.Section("PRE")
-    release = h.depletion(PRE(0.5))
-    stim = add_stim(release, number, interval, STIM_START, 1)
-    dend = cell.lm_medium1
-    positions  = spines.add_spines(dend, NSPINES)
-    random.seed(1)
-
-    random_pos = random.sample(list(range(NSPINES)), n_spines)
-    # for a 150 um long dend 1 spine per um
-    for section in cell.all:
-        spines.balance_currents(section, Vrest)
+def run(n_syn, number, interval):
+    cell = spines.TomkoSpines(spine_num=NSPINES, dend=["rad_t2"])
     
-    head_list = [positions[x][0][0] for x in positions.keys()]
-    targets = [dend] if n_spines == 0 else [head_list[x] for
-                                            x in random_pos]
-    syns, syns_nmdar = [], []
+    pre = {}
+    release = {}
+    stims = {}
+    net_connections = {}
+    for dend in cell.positions.keys():
+        pre[dend] = []
+        release[dend] = []
+        stims[dend] = []
+        net_connections[dend] = []
+        for i in range(n_syn):
+            pre[dend].append(h.Section("PRE_%s_%d" % (dend, i)))
+            release[dend].append(h.depletion(pre[dend][i](0.5)))
+            stim, netcon = add_stim(release[dend][i], number,
+                                        interval, STIM_START, 1)
+            stims[dend].append(stim)
+            net_connections[dend].append(netcon)
 
-    for sec in targets:
-        ampar = spines.add_synapse_ampa(sec, gAMPA)
-        nmdar = spines.add_synapse_nmda(sec, gNMDA)
-        syns += [nmdar, ampar]
-        syns_nmdar += [nmdar]
+    syns, syns_nmdar = {}, {}
+
+    for dend in cell.positions.keys():
+        random.seed(1)
+        random_pos = random.sample(list(range(NSPINES)), n_syn)
+       
+        head_list = [cell.positions[dend][x][0][0] for x in cell.positions[dend].keys()]
+        targets = [head_list[x] for x in random_pos]
+        syns[dend] = []
+        syns_nmdar[dend] = []
+
+        for sec in targets:
+            ampar = spines.add_synapse_ampa(sec, gAMPA)
+            nmdar = spines.add_synapse_nmda(sec, gNMDA)
+            syns[dend] += [nmdar, ampar]
+            syns_nmdar[dend] += [nmdar]
 
 
-    transmitter = h.Vector().record(release._ref_T, 0.01)
-    for syn in syns:
-        h.setpointer(release._ref_T, 'T', syn) 
+    for dend in release.keys():
+        for i, x in enumerate(release[dend]):
+            h.setpointer(x._ref_T, 'T', syns[dend][2*i]) #  nmdar
+            h.setpointer(x._ref_T, 'T', syns[dend][2*i+1]) #  ampar
 
-
-    transmitter = h.Vector().record(release._ref_T, 0.01)
     ica_soma = h.Vector().record(cell.soma[0](0.5)._ref_ica)
     v_soma = h.Vector().record(cell.soma[0](0.5)._ref_v)
-    ica_dend = []
-    for x in dend:
-        ica_dend.append(h.Vector().record(x._ref_ica))
-    ica_spine = []
-    ica_nmdar = []
-    if n_spines:
-        for x in positions.keys():
-            syn_seg = positions[x][0][0]
-            ica_spine.append(h.Vector().record(syn_seg(0.5)._ref_ica))
-    else:
-        ica_spine.append(h.Vector().record(dend(0.5)._ref_ica))
+    ica_dend = {}
+    for dend in cell.positions:
+        ica_dend[dend] = []
+        x = cell.find_sec(dend)
+   
+        ica_dend[dend].append(h.Vector().record(x(0.5)._ref_ica))
+    ica_spine = {}
 
-    for syn in syns_nmdar:
-        ica_nmdar.append(h.Vector().record(syn._ref_ica_nmdar))
-        
+    for dend in cell.positions.keys():
+        ica_spine[dend] = []
+        for x in cell.positions[dend].keys():
+            syn_seg = cell.positions[dend][x][0][0]
+            ica_spine[dend].append(h.Vector().record(syn_seg(0.5)._ref_ica))
+
     t_vec = h.Vector().record(h._ref_t)
 
     h.dt = 0.025
-    h.tstop = STIM_START + number * interval + TAIL
+    tstop = STIM_START + number * interval + TAIL
     h.v_init = -65
     h.celsius = 35
     h.finitialize(-65)
     h.fcurrent()
     h.cvode_active(1)
-    h.run()
+    h.continuerun(tstop)
 
-    return np.array(t_vec), np.array(ica_soma), np.array(ica_dend), np.array(ica_spine), np.array(ica_nmdar), np.array(v_soma), np.array(transmitter)
+    return t_vec, ica_soma, ica_dend, ica_spine, v_soma
 
 
 def main():
     out_path = sys.argv[1] if len(sys.argv) > 1 else 'results.h5'
     with h5py.File(out_path, 'w') as f:
         for protocol, (number, interval) in PROTOCOLS.items():
-            for n_spines in SPINE_COUNTS:
-                out = run(n_spines,
+            for n_syn in SPINE_COUNTS:
+                out = run(n_syn,
                           number,
                           interval)
-                t, ica_soma, ica_dend, ica_spine, ica_nmdar, v_soma, tran = out
-                grp = f.create_group('%s/%dspines' % (protocol, n_spines))
-                grp.create_dataset('t', data=t)
-                grp.create_dataset('ica_soma', data=ica_soma)
-                grp.create_dataset('ica_dend', data=ica_dend)
-                grp.create_dataset('ica_spine', data=ica_spine)
-                grp.create_dataset('ica_nmdar', data=ica_nmdar)
-                grp.create_dataset('v_soma', data=v_soma)
-                grp.create_dataset('transmitter', data=tran)
-                print(protocol, n_spines, 'done')
+                t, ica_soma, ica_dend, ica_spine, v_soma = out
+                grp = f.create_group('%s/%dspines' % (protocol, n_syn))
+                grp.create_dataset('t', data=np.array(t))
+                grp.create_dataset('ica_soma', data=np.array(ica_soma))
+                for dend in ica_dend.keys():
+                    grp.create_dataset('ica_dend_%s'%dend, data=np.array(ica_dend[dend]))
+                    for i, x in enumerate(ica_spine[dend]):
+                        grp.create_dataset('ica_spine_%s_stim_%d' %(dend, i),
+                                           data=np.array(x))
+                grp.create_dataset('v_soma', data=np.array(v_soma))
+                print(protocol, n_syn, 'done')
 
 
 if __name__ == '__main__':

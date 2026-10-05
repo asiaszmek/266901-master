@@ -1,4 +1,9 @@
-from neuron import h
+import os
+from neuron import h, gui, load_mechanisms
+
+load_mechanisms("./Mods")
+h.load_file("stdrun.hoc")
+h.xopen('pyramidal_cell_weak_bAP_updated.hoc')
 
 NECK_L, NECK_DIAM = .5, 0.25
 HEAD_L, HEAD_DIAM = 0.264, 1.0
@@ -7,7 +12,67 @@ neck_Ra = 12000
 CM = 1.4
 G_PAS = 9.03e-5
 E_PAS = -65.0
+NSPINES = 100
+gAMPA = 25e-2
+AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
+gNMDA = gAMPA/AtoN_ratio
+
+ca_channels = ["cal12", "cal13", "can", "car", "cat"]
+
+class TomkoSpines():
+    def find_sec(self, name):
+        for sec in self.cell.all:
+            if name in sec.name():
+                return sec
+
+    def adjust_ca_buffer_capacity(self):
+        for sec in h.allsec():
+            if h.ismembrane("ca_ion", sec=sec):
+                for seg in sec:
+                    to_mech = getattr(seg, "cacum")
+                    if sec.diam < 2:
+                        setattr(to_mech, "B", 20)
+                        self.adjust_ca_channel_gbar(seg, 20)
+                    else:
+                        setattr(to_mech, "B", 60)
+                        self.adjust_ca_channel_gbar(seg, 60)
+           
+                
+    def adjust_ca_channel_gbar(self, segment, multiplier):
+        for mech_name in ca_channels:
+            try:
+                seg_mech = getattr(segment, mech_name)
+            except AttributeError:
+                continue
+            previous_value = getattr(seg_mech, "gbar")
+            setattr(seg_mech, "gbar", previous_value*multiplier)
+
+
+                
+    def __init__(self, mod_path="Mods",
+                 spine_num=NSPINES, dend="lm_medium1", Vrest=-65):
+        self.mods = os.path.join(".", mod_path)
+  
+       
+        self.v_init = Vrest
+        self.cell = h.CA1_PC_Tomko()
+        self.positions = {}
+        if isinstance(dend, str):
+            dends = [dend]
+        elif isinstance(dend, list):
+            dends = dend.copy()
+        for dend in dends:
+            section = self.find_sec(dend)
+            self.positions[dend] = add_spines(section, NSPINES)
+        self.all = []
+        for section in h.allsec():
+            balance_currents(section, Vrest)
+            self.all.append(section)
+        self.soma = self.cell.soma
+        self.adjust_ca_buffer_capacity()
+        
+        
 
 def balance_currents(section, Vrest, check = False):
     """

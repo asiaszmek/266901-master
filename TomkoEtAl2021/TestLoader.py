@@ -125,13 +125,12 @@ class ModelLoader(sciunit.Model,
 
         """ This class should be used with Jupyter notebooks"""
 
-        load_mechanisms('./Mods/')
-        self.hocpath = hocpath
+          
         
         self.model_args = {}
         self.cvode_active = cvode
         self.max_dist_from_soma = 150
-        self.modelpath = os.path.join(".", "Mods") 
+        
         self.AMPA_name = "AMPA5"
         self.NMDA_name = "NMDA5_CA"
         self.presynaptic = {}
@@ -140,7 +139,7 @@ class ModelLoader(sciunit.Model,
         self.ns_list = {}
         self.ampars = {}
         self.nmdars = {}
-        self.libpath = 'x86_64/.libs/libnrnmech.so'
+       
         self.name = name
         self.start = 150
         self.max_dist_from_soma = 150
@@ -158,7 +157,6 @@ class ModelLoader(sciunit.Model,
         self.dend_loc = []  
         self.dend_locations = collections.OrderedDict()
         self.base_directory = './validation_results/'   
-        self.compile_mod_files()
         self.ampars = {}
         self.nmdars = {}
         self.positions = {}
@@ -181,16 +179,6 @@ class ModelLoader(sciunit.Model,
             self.ampars[sec_name].append(add_synapse_ampa(my_head, gAMPA))
             self.nmdars[sec_name].append(add_synapse_nmda(my_head, gNMDA))
             
-    def compile_mod_files(self):
-        if self.modelpath is None:
-            raise Exception("""Please give the path to the mod files (eg. mod_files_path = \'/home/models/CA1_pyr/mechanisms/\') 
-            as an argument to the ModelLoader class""")
-
-        #if os.path.isfile(self.modelpath + self.libpath) is False:
-        working_dir = os.getcwd()
-        os.chdir(self.modelpath)
-        p = run('nrnivmodl')
-        os.chdir(working_dir)
 
     def translate(self, sectiontype, distance=0):
         if "soma" in sectiontype:
@@ -198,29 +186,14 @@ class ModelLoader(sciunit.Model,
         else:
             return False
 
-
-    def load_mod_files(self):
-        h.nrn_load_dll(str(self.modelpath + self.libpath))
         
     def initialize(self, args={}):
         save_stdout = sys.stdout
         sys.stdout = open('/dev/stdout', 'w')
-        self.load_mod_files()
-        if self.hocpath is None:
-            raise Exception("Please give the path to the hoc file (eg. model.modelpath = \"/home/models/CA1_pyr/CA1_pyr_model.hoc\")")
-
-        sys.stdout=save_stdout
-
-        h.xopen(str(self.hocpath))
-        h.load_file("stdrun.hoc")     
-      
-        self.cell = h.CA1_PC_Tomko()
-        for dend in [self.cell.rad_t1, self.cell.rad_t2, self.cell.rad_t3]:
-            self.positions[dend.name()] = spines.add_spines(dend, NSPINES)
-        for section in h.allsec():
-            spines.balance_currents(section, self.v_init)
-        self.soma = self.cell.soma[0]
-        
+        new_model = spines.TomkoSpines(dend=["rad_t1", "rad_t2", "rad_t3"])
+        self.cell = new_model.cell
+        self.soma = new_model.soma[0]
+        self.positions = new_model.positions
         sys.stdout = save_stdout    #setting output back to normal
         h.celsius = self.celsius
         
