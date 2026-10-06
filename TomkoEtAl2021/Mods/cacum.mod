@@ -12,12 +12,16 @@ NEURON {
 	USEION ca READ ica WRITE cai
 	NONSPECIFIC_CURRENT i
 	RANGE depth, tau, cai0, cmax, B
+	RANGE flux, flux_per_um
 }
 
 UNITS {
 	(mM) = (milli/liter)
 	(mA) = (milliamp)
-	F = (faraday) (coulombs)
+        F = (faraday) (coulombs)
+       (um) = (micron)
+       (umms) = (micron ms)
+	PI = (pi) (1)
 }
 
 PARAMETER {
@@ -29,6 +33,7 @@ PARAMETER {
 			: block for it to take precedence over cai0_ca_ion
 			: Do not forget to initialize in hoc if different
 			: from this default.
+       
 }
 
 
@@ -36,6 +41,10 @@ ASSIGNED {
 	ica (mA/cm2)
 	cmax
 	i  	 (mA/cm2)
+	flux (1/ms)
+	flux_per_um (1/umms)
+	area (um2)
+        diam (um)
 }
 
 STATE {
@@ -56,4 +65,6 @@ BREAKPOINT {
 
 DERIVATIVE integrate {
 	cai' = (irest-ica)/depth/F/2/B * (1e4) + (cai0 - cai)/tau
+	flux = (irest-ica)/F/2*area*(1e11)
+        flux_per_um = flux/PI/diam
 }

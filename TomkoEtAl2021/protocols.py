@@ -10,7 +10,7 @@ AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
 gNMDA = gAMPA/AtoN_ratio
 
-SPINE_COUNTS = [1, 2, 3, 4, 5, 10, 11,  12, 15, 18]
+SPINE_COUNTS = [1, 2, 3, 4,]# 5, 10, 11,  12, 15, 18]
 PROTOCOLS = {
     '1EPSP': (1, 10.0),
     '4EPSP_100Hz': (4, 10.0),
@@ -40,7 +40,7 @@ def add_stim(syn, pairings, inter, start, w):
 
 
 def run(n_syn, number, interval):
-    cell = spines.TomkoSpines(spine_num=NSPINES, dend=["rad_t2"])
+    cell = spines.TomkoSpines(spine_num=NSPINES, dend=["lm_medium1"])
     
     pre = {}
     release = {}
@@ -85,11 +85,14 @@ def run(n_syn, number, interval):
     ica_soma = h.Vector().record(cell.soma[0](0.5)._ref_ica)
     v_soma = h.Vector().record(cell.soma[0](0.5)._ref_v)
     ica_dend = {}
+    flux_per_um = {}
     for dend in cell.positions:
-        ica_dend[dend] = []
         x = cell.find_sec(dend)
    
-        ica_dend[dend].append(h.Vector().record(x(0.5)._ref_ica))
+        ica_dend[dend] = h.Vector().record(x(0.5)._ref_ica)
+      
+        to_mech = getattr(x(0.5), "cacum")
+        flux_per_um[dend] = h.Vector().record(to_mech._ref_flux_per_um)
     ica_spine = {}
 
     for dend in cell.positions.keys():
@@ -109,7 +112,7 @@ def run(n_syn, number, interval):
     h.cvode_active(1)
     h.continuerun(tstop)
 
-    return t_vec, ica_soma, ica_dend, ica_spine, v_soma
+    return t_vec, ica_soma, ica_dend, ica_spine, v_soma, flux_per_um
 
 
 def main():
@@ -120,12 +123,15 @@ def main():
                 out = run(n_syn,
                           number,
                           interval)
-                t, ica_soma, ica_dend, ica_spine, v_soma = out
+                t, ica_soma, ica_dend, ica_spine, v_soma, fpu = out
                 grp = f.create_group('%s/%dspines' % (protocol, n_syn))
                 grp.create_dataset('t', data=np.array(t))
                 grp.create_dataset('ica_soma', data=np.array(ica_soma))
                 for dend in ica_dend.keys():
-                    grp.create_dataset('ica_dend_%s'%dend, data=np.array(ica_dend[dend]))
+                    grp.create_dataset('ica_dend_%s'%dend,
+                                       data=np.array(ica_dend[dend]))
+                    grp.create_dataset('fpu_dend_%s'%dend,
+                                       data=np.array(fpu[dend]))
                     for i, x in enumerate(ica_spine[dend]):
                         grp.create_dataset('ica_spine_%s_stim_%d' %(dend, i),
                                            data=np.array(x))

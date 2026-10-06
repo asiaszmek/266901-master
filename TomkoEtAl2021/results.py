@@ -32,24 +32,26 @@ for l, dend_key in enumerate(dend_keys):
     for i, protocol in enumerate(protocols):
 
         min_y = []
+        max_y = []
         for j, spine_key in enumerate(spine_keys):
             ax = axes[l][i, j]
             grp = f[protocol][spine_key]
 
-            for k, x in enumerate(grp[dend_key]):
-                ax.plot(grp['t'][:], x[:]*area[dend_key]*0.01, label=k)
-                ax.set_title(protocol + ' - ' + spine_key)
-                min_y.append(min(ax.get_ylim()))
 
+            ax.plot(grp['t'][:], grp[dend_key][:],
+                    label=dend_key.replace("ica_dend", ""))
+            ax.set_title(protocol + ' - ' + spine_key)
+            min_y.append(min(ax.get_ylim()))
+            max_y.append(max(ax.get_ylim()))
         for j in range(len(spine_keys)):
-            axes[l][i, j].set_ylim([min(min_y), 0])
+            axes[l][i, j].set_ylim([min(min_y), max(max_y)])
             if i == 2:
                 ax.set_xlabel('Time (ms)')
             else:
             
                 pass
             if j == 0:
-                ax.set_ylabel('ica_dend in segment (nA)')
+                ax.set_ylabel('ica_dend in segment (mA/cm2)')
             else:
                 axes[l][i, j].set_yticks([])
     
