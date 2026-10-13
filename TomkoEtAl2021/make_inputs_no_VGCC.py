@@ -1,5 +1,6 @@
 import os
 import h5py
+import argparse
 
 import numpy as np
 from lxml import etree
@@ -18,6 +19,12 @@ stim_spine = "sa1[0].pointA"
 sites_list = ["dend0%d:submembrane" % i for i in range(1, 10)]
 sites_list2 = ["dend%d:submembrane" % i for i in range(10, 22)]
 sites_list += sites_list2
+
+def Parser():
+    parser = argparse.ArgumentParser(description='Make xml stimulation file for NeuroRD')
+    parser.add_argument('input', 
+                        help='Specify the hdf file with results')
+    return parser
 
 def make_xml_file(inj_text, sites_list=sites_list):
     my_rxn_file = etree.Element("StimulationSet")
@@ -47,7 +54,9 @@ def extract_flux(t, flux):
 
 
 if __name__ == "__main__":
-    f = h5py.File(FNAME, 'r')
+    args = Parser().parse_args()
+    fname = args.input
+    f = h5py.File(fname, 'r')
 
     protocols = list(f.keys())
     stim_spines = list(f[protocols[0]].keys())
@@ -71,9 +80,8 @@ if __name__ == "__main__":
                 which_dend = dend_key.replace("fpu_dend_", "")
                 for spine_idx in range(100):
                     spine_maxes.append(grp['fpu_spine_%s_stim_%d' %(which_dend, spine_idx)][:].sum())
-                
                 which_spine = np.argmax(spine_maxes)
-               
+                print(which_spine)
                                        
                 fpu_spine = grp['fpu_spine_%s_stim_%d' %(which_dend, which_spine)][:]
                 inj_spine = extract_flux(t, fpu_spine)
@@ -84,9 +92,12 @@ if __name__ == "__main__":
                 inj_site.set("injectionSite", stim_spine)
                 rates = etree.SubElement(inj_site, "rates")
                 rates.text = inj_spine
-                my_root_filename = "%s_%s_%s.xml" % (dend_key.replace("fpu_dend", "fpu_spine"), protocol,
-                                                    spine_key)
-                with open(my_root_filename, "w") as f1:
+                root_fname = "%s_%s_%s_%s.xml" % (dend_key.replace("fpu_dend",
+                                                                   "fpu_spine"),
+                                                  protocol,
+                                                  spine_key, fname.replace(".h5",
+                                                                           ""))
+                with open(root_fname, "w") as f1:
                    f1.write(etree.tostring(my_root,
                                            pretty_print=True).decode("utf-8"))
                 transmitter = grp["transmitter_1st_spine_%s" % which_dend][:]*6.022*100
@@ -96,10 +107,12 @@ if __name__ == "__main__":
                 inj_site.set("injectionSite", stim_spine)
                 rates = etree.SubElement(inj_site, "rates")
                 rates.text = trans_text
-                my_root_filename_glu = "%s_%s_%s_with_glu.xml" % (dend_key.replace("fpu_dend",
-                                                                                   "fpu_spine"),
-                                                                  protocol,
-                                                                  spine_key)
-                with open(my_root_filename_glu, "w") as f1:
+                root_fname_glu = "%s_%s_%s_%s_with_glu.xml" % (dend_key.replace("fpu_dend",
+                                                                                "fpu_spine"),
+                                                               protocol,
+                                                               spine_key,
+                                                               fname.replace(".h5",
+                                                                             ""))
+                with open(root_fname_glu, "w") as f1:
                     f1.write(etree.tostring(my_root,
                                             pretty_print=True).decode("utf-8"))
