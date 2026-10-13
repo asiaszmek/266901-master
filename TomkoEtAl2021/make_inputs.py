@@ -72,8 +72,16 @@ if __name__ == "__main__":
                 which_dend = dend_key.replace("fpu_dend_", "")
                 my_root = make_xml_file(inj_text,
                                         sites_list=sites_list)
-                fpu_spine = grp['fpu_spine_%s_stim_%d' %(which_dend, 17)][:]
+                spine_maxes = []
+                for spine_idx in range(100):
+                    spine_maxes.append(grp['fpu_spine_%s_stim_%d' %(which_dend, spine_idx)][:].sum())
+        
+                which_spine = np.argmax(spine_maxes)
+                print(which_spine)
+                                       
+                fpu_spine = grp['fpu_spine_%s_stim_%d' %(which_dend, which_spine)][:]
                 inj_spine = extract_flux(t, fpu_spine)
+                print(inj_spine)
                 inj_site = etree.SubElement(my_root, "InjectionStim")
                 inj_site.set("specieID", "Ca")
                 inj_site.set("injectionSite", stim_spine)
