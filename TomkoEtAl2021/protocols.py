@@ -1,5 +1,6 @@
 import sys
 import random
+import argparse
 import h5py
 import numpy as np
 from neuron import h,  load_mechanisms
@@ -21,12 +22,25 @@ PROTOCOLS = {
 STIM_START = 150.0
 TAIL = 300.0
 Vrest = -65
-NSPINES = 100
+
 dt = 1
 
 
-def run(n_syn, number, interval):
-    cell = spines.TomkoSpines(spine_num=NSPINES, dend=["lm_medium1"])
+def Parser():
+    parser = argparse.ArgumentParser(description='Run spine stimulation')
+    parser.add_argument('--stim_type', default="dispersed",
+                        help='Specify either dispersed or clustered')
+    parser.add_argument('--branch', default="lm_medium1",
+                        help='Specify branch with spines')
+    parser.add_argument('--spine_density', default=1.,
+                        help='Specify spine density in spines/um')
+    parser.add_argument('--output', default="results",
+                        help='Specify, where to save results')
+ 
+    return parser
+
+def run(n_syn, number, interval, branch, spine_density, stim_type):
+    cell = spines.TomkoSpines(spine_density=spine_density, dend=[branch])
     
     pre = {}
     release = {}
@@ -48,8 +62,13 @@ def run(n_syn, number, interval):
     syns, syns_nmdar = {}, {}
 
     for dend in cell.positions.keys():
-        random.seed(1)
-        random_pos = random.sample(list(range(NSPINES)), n_syn)
+        if stim_type == "dispersed":
+            random.seed(1)
+            NSPINES = len(cell.positions[dend])
+            random_pos = random.sample(list(range(NSPINES)), n_syn)
+        else:
+            random_pos = [x+17 for x in range(n_syn)] 
+        print(random_pos)
         head_list = [cell.positions[dend][x][0][0] for x in cell.positions[dend].keys()]
         targets = [head_list[x] for x in random_pos]
         syns[dend] = []
@@ -108,14 +127,14 @@ def run(n_syn, number, interval):
     return t_vec, ica_soma, ica_dend, ica_spine, v_soma, v_spine, flux_per_um, fpu_spine, transmitter
 
 
-def main():
-    out_path = sys.argv[1] if len(sys.argv) > 1 else 'results.h5'
+def main(branch, spine_density, stim_type, output_name):
+    out_path = "%s_%s.h5" % (output_name, stim_type)
     with h5py.File(out_path, 'w') as f:
         for protocol, (number, interval) in PROTOCOLS.items():
             for n_syn in SPINE_COUNTS:
                 out = run(n_syn,
                           number,
-                          interval)
+                          interval, branch, spine_density, stim_type)
                 t, ica_soma, ica_dend, ica_spine, v_soma, v_spine, fpu, fpu_spine, trans = out
                 grp = f.create_group('%s/%dspines' % (protocol, n_syn))
                 grp.create_dataset('t', data=np.array(t))
@@ -139,4 +158,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    args = Parser().parse_args()
+    
+    main(args.branch, args.spine_density, args.stim_type, args.output)

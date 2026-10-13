@@ -51,12 +51,11 @@ class TomkoSpines():
 
                 
     def __init__(self, mod_path="Mods",
-                 spine_num=NSPINES, dend="lm_medium1", Vrest=-65):
+                 spine_num=NSPINES, dend="lm_medium1", Vrest=-65, **args):
         self.mods = os.path.join(".", mod_path)
-  
-       
         self.v_init = Vrest
         self.cell = h.CA1_PC_Tomko()
+            
         self.positions = {}
         if isinstance(dend, str):
             dends = [dend]
@@ -64,6 +63,8 @@ class TomkoSpines():
             dends = dend.copy()
         for dend in dends:
             section = self.find_sec(dend)
+            if "spine_density" in args:
+                spine_num = int(args["spine_density"]*section.L)
             self.positions[dend] = add_spines(section, spine_num)
         self.all = []
         for section in h.allsec():
