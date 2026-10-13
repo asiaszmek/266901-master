@@ -2,15 +2,15 @@ import sys
 import random
 import h5py
 import numpy as np
-from neuron import h, gui, load_mechanisms
+from neuron import h,  load_mechanisms
 
 import spines 
-gAMPA = 25e-2
+gAMPA = 25e-3
 AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
 gNMDA = gAMPA/AtoN_ratio
 
-SPINE_COUNTS = [1, 2, 3, 4, 5,6,7,8,9, 10, 11,  12, 15, 18]
+SPINE_COUNTS = [1, 5, 10, 15, 20]
 PROTOCOLS = {
     '1EPSP': (1, 10.0),
     '4EPSP_100Hz': (4, 10.0),
@@ -23,20 +23,6 @@ TAIL = 300.0
 Vrest = -65
 NSPINES = 100
 dt = 1
-
-
-
-
-
-def add_stim(syn, pairings, inter, start, w):
-    stim = h.NetStim()
-    stim.number = pairings
-    stim.interval = inter
-    stim.start = start
-    stim.noise = 0
-    netcon = h.NetCon(stim, syn, 0, 0, w)
-    return netcon, stim
-
 
 
 def run(n_syn, number, interval):
@@ -54,8 +40,8 @@ def run(n_syn, number, interval):
         for i in range(n_syn):
             pre[dend].append(h.Section("PRE_%s_%d" % (dend, i)))
             release[dend].append(h.depletion(pre[dend][i](0.5)))
-            stim, netcon = add_stim(release[dend][i], number,
-                                        interval, STIM_START, 1)
+            stim, netcon = spines.add_stim(release[dend][i], number,
+                                           interval, STIM_START, 1)
             stims[dend].append(stim)
             net_connections[dend].append(netcon)
 
