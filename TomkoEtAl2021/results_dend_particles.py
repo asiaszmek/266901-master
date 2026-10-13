@@ -48,8 +48,11 @@ for l, dend_key in enumerate(dend_keys):
         #     else:
         #         axes[l][i, j].set_yticks([])
     
-#axes[0][-1, -1].legend()
-plt.tight_layout()
-plt.show()
+        #axes[0][-1, -1].legend()
+    plt.tight_layout()
+    figs[l].savefig("Dend_particle_flux%s.png" %dend_key, format='png', bbox_inches='tight')
+    
 
-f.close()
+
+
+

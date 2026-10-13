@@ -1,11 +1,7 @@
 import os
 import h5py
 import matplotlib.pyplot as plt
-area = {}
-area["ica_dend_rad_t2"] = 471
-area["ica_dend_rad_t1"] = 471
-area["ica_dend_rad_t3"] = 471
-area["ica_dend_lm_medium1"] = 94
+
 FNAME = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'results.h5')
 
 f = h5py.File(FNAME, 'r')
@@ -54,9 +50,7 @@ for l, dend_key in enumerate(dend_keys):
                 ax.set_ylabel('ica_dend in segment (mA/cm2)')
             else:
                 axes[l][i, j].set_yticks([])
-    
-#axes[0][-1, -1].legend()
-plt.tight_layout()
-plt.show()
+    plt.tight_layout()
+    figs[l].savefig("Dend_Ica_%s.png" %dend_key, format='png', bbox_inches='tight')
 
-f.close()
+   

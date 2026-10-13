@@ -2,9 +2,9 @@ import os
 from neuron import h, gui, load_mechanisms
 
 load_mechanisms("./Mods")
-h.load_file("stdrun.hoc")
-h.xopen('pyramidal_cell_weak_bAP_updated.hoc')
 
+h.xopen('pyramidal_cell_weak_bAP_updated.hoc')
+h.load_file("stdrun.hoc")
 NECK_L, NECK_DIAM = .5, 0.25
 HEAD_L, HEAD_DIAM = 0.264, 1.0
 RA = 12000
@@ -13,7 +13,7 @@ CM = 1.4
 G_PAS = 9.03e-5
 E_PAS = -65.0
 NSPINES = 100
-gAMPA = 25e-2
+gAMPA = 25e-3
 AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
 gNMDA = gAMPA/AtoN_ratio
@@ -64,15 +64,24 @@ class TomkoSpines():
             dends = dend.copy()
         for dend in dends:
             section = self.find_sec(dend)
-            self.positions[dend] = add_spines(section, NSPINES)
+            self.positions[dend] = add_spines(section, spine_num)
         self.all = []
         for section in h.allsec():
             balance_currents(section, Vrest)
             self.all.append(section)
         self.soma = self.cell.soma
         self.adjust_ca_buffer_capacity()
+
         
-        
+def add_stim(syn, pairings, inter, start, w):
+    stim = h.NetStim()
+    stim.number = pairings
+    stim.interval = inter
+    stim.start = start
+    stim.noise = 0
+    netcon = h.NetCon(stim, syn, 0, 0, w)
+    return netcon, stim
+
 
 def balance_currents(section, Vrest, check = False):
     """
@@ -119,7 +128,11 @@ def compensate_for_spines(dend, positions):
                     if mech in neck.psection()["density_mechs"]:
                         cond = neck.psection()["density_mechs"][mech]['gbar'][i]
                         tot_spine_cond += spine_seg.area() * cond
-            seg_mech = getattr(segment, mech)
+            try:
+                seg_mech = getattr(segment, mech)
+            except AttributeError:
+                print(mech, segment)
+                continue
             seg_cond = getattr(seg_mech, "gbar")
             new_cond = (seg_cond*seg_surf - tot_spine_cond)/seg_surf
             setattr(seg_mech, "gbar", new_cond)
@@ -141,7 +154,7 @@ def compensate_for_spines(dend, positions):
     segment.cm = new_cm
 
                 
-def add_spines(dend, n, x0=0.1, x1=0.9, neck_L=NECK_L, neck_diam=NECK_DIAM,
+def add_spines(dend, n, x0=0.01, x1=0.99, neck_L=NECK_L, neck_diam=NECK_DIAM,
                 head_L=HEAD_L, head_diam=HEAD_DIAM, Ra=RA, cm=CM, head_mechanisms=[]):
     necks, heads = [], []
     positions = {}

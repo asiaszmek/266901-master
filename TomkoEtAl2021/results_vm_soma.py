@@ -39,6 +39,6 @@ for i, protocol in enumerate(protocols):
     
 
 plt.tight_layout()
-plt.show()
+plt.savefig("Vm_at_soma.png", format='png', bbox_inches='tight')
 
-f.close()
+

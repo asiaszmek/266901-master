@@ -16,7 +16,7 @@ for key in f[protocols[0]][stim_spines[0]].keys():
         dend_keys.append(key.replace("ica_dend_", ""))
 
 
-fig, axes = plt.subplots(len(protocols), len(spine_keys), figsize=(5 * len(spine_keys), 4 * len(protocols)))
+
 random_pos = [17, 72, 97, 8, 32, 15, 63, 57, 60, 83, 48, 26, 12, 62, 3, 49, 55, 77]
 figs, axes = [], []
 
@@ -34,7 +34,7 @@ for l, dend_key in enumerate(dend_keys):
         for j, spine_key in enumerate(spine_keys):
             ax = axes[l][i, j]
             grp = f[protocol][spine_key]
-            for k in random_pos:
+            for k in random_pos[:3]:
                 x = grp['ica_spine_%s_stim_%d'%(dend_key, k)]
                 ax.plot(grp['t'][:], x[:], label="spine %d" % k)
 
@@ -54,7 +54,5 @@ for l, dend_key in enumerate(dend_keys):
             else:
                 axes[l][i, j].set_yticks([])
             
-plt.tight_layout()
-plt.show()
-
-f.close()
+    plt.tight_layout()
+    figs[l].savefig("Spine_Ica_%s.png" %dend_key, format='png', bbox_inches='tight')
