@@ -26,7 +26,7 @@ UNITS {
 PARAMETER {
 	depth = 0.1 (um)	: assume volume = area*depth
 	irest = 0  (mA/cm2)		: to be initialized in hoc	
-					     tau = 30 (ms)
+	tau = 30 (ms)
         B = 1                           : ca buffer capacity
 	cai0 = 70e-6 (mM)	: Requires explicit use in INITIAL
 			: block for it to take precedence over cai0_ca_ion
