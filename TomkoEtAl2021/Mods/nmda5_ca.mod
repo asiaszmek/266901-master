@@ -57,12 +57,13 @@ INDEPENDENT {t FROM 0 TO 1 WITH 1 (ms)}
 NEURON {
 	POINT_PROCESS NMDA5_CA
 	POINTER T
-	USEION ca READ cai, cao WRITE ica			   
+	USEION ca READ cai, cao WRITE ica
+	RANGE ica_nmdar
 	RANGE C0, C1, C2, D, O, B, glu
 	RANGE g, gmax, rb, fCa, c_2
         RANGE Erev, Rb, Ru, Rd, Rr, Ro, Rc
 	GLOBAL mg
-	RANGE vmin, vmax, ica_nmdar
+	RANGE vmin, vmax
 	NONSPECIFIC_CURRENT i
 }
 

@@ -110,7 +110,7 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
             ica_spine[dend].append(h.Vector().record(syn_seg(0.5)._ref_ica, dt))
             v_spine[dend].append(h.Vector().record(syn_seg(0.5)._ref_v, dt))
             to_mech = getattr(syn_seg(0.5), "cacum")
-            fpu_spine[dend].append(h.Vector().record(to_mech._ref_flux_per_um, dt))
+            fpu_spine[dend].append(h.Vector().record(to_mech._ref_flux, dt))
         transmitter[dend] = h.Vector().record(release[dend][0]._ref_T, dt)
     t_vec = h.Vector().record(h._ref_t, dt)
 

@@ -10,7 +10,6 @@ ENDCOMMENT
 NEURON {
 	SUFFIX cacum
 	USEION ca READ ica WRITE cai
-	NONSPECIFIC_CURRENT i
 	RANGE depth, tau, cai0, cmax, B
 	RANGE flux, flux_per_um
 }
@@ -40,7 +39,6 @@ PARAMETER {
 ASSIGNED {
 	ica (mA/cm2)
 	cmax
-	i  	 (mA/cm2)
 	flux (1/ms)
 	flux_per_um (1/umms)
 	area (um2)
@@ -60,11 +58,13 @@ INITIAL {
 BREAKPOINT {
 	SOLVE integrate METHOD derivimplicit
 	if (cai>cmax) {cmax=cai}
-	i=0
+		  
 }
 
 DERIVATIVE integrate {
 	cai' = (irest-ica)/depth/F/2/B * (1e4) + (cai0 - cai)/tau
 	flux = (irest-ica)/F/2*area*(1e11)
         flux_per_um = flux/PI/diam
+     
+     	
 }
