@@ -6,7 +6,7 @@ import numpy as np
 from neuron import h,  load_mechanisms
 
 import spines 
-gAMPA = 25e-3
+gAMPA = 1e-5
 AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
 gNMDA = gAMPA/AtoN_ratio
@@ -42,26 +42,16 @@ def Parser():
 def run(n_syn, number, interval, branch, spine_density, stim_type):
     cell = spines.TomkoSpines(spine_density=spine_density, dend=[branch])
     
-    pre = {}
-    release = {}
+    #pre = {}
+    #release = {}
     stims = {}
     net_connections = {}
+    
+    syns_ampar, syns_nmdar = {}, {}
+
     for dend in cell.positions.keys():
-        pre[dend] = []
-        release[dend] = []
         stims[dend] = []
         net_connections[dend] = []
-        for i in range(n_syn):
-            pre[dend].append(h.Section("PRE_%s_%d" % (dend, i)))
-            release[dend].append(h.depletion(pre[dend][i](0.5)))
-            stim, netcon = spines.add_stim(release[dend][i], number,
-                                           interval, STIM_START, 1)
-            stims[dend].append(stim)
-            net_connections[dend].append(netcon)
-
-    syns, syns_nmdar = {}, {}
-
-    for dend in cell.positions.keys():
         if stim_type == "dispersed":
             random.seed(1)
             NSPINES = len(cell.positions[dend])
@@ -69,22 +59,26 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
         else:
             random_pos = [x+17 for x in range(n_syn)] 
         print(random_pos)
+        
         head_list = [cell.positions[dend][x][0][0] for x in cell.positions[dend].keys()]
         targets = [head_list[x] for x in random_pos]
-        syns[dend] = []
+        syns_ampar[dend] = []
         syns_nmdar[dend] = []
 
         for sec in targets:
             ampar = spines.add_synapse_ampa(sec, gAMPA)
+            stim, netcon = spines.add_stim(ampar, number,
+                                           interval, STIM_START, 1)
+            stims[dend].append(stim)
+            net_connections[dend].append(netcon)
             nmdar = spines.add_synapse_nmda(sec, gNMDA)
-            syns[dend] += [nmdar, ampar]
+            stim, netcon = spines.add_stim(nmdar, number,
+                                           interval, STIM_START, 1)
+            stims[dend].append(stim)
+            net_connections[dend].append(netcon)
+
+            syns_ampar[dend] += [ampar]
             syns_nmdar[dend] += [nmdar]
-
-
-    for dend in release.keys():
-        for i, x in enumerate(release[dend]):
-            h.setpointer(x._ref_T, 'T', syns[dend][2*i]) #  nmdar
-            h.setpointer(x._ref_T, 'T', syns[dend][2*i+1]) #  ampar
 
     ica_soma = h.Vector().record(cell.soma[0](0.5)._ref_ica, dt)
     v_soma = h.Vector().record(cell.soma[0](0.5)._ref_v, dt)
@@ -105,13 +99,17 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
         ica_spine[dend] = []
         v_spine[dend] = []
         fpu_spine[dend] = []
-        for x in cell.positions[dend].keys():
+        for i, x in enumerate(cell.positions[dend].keys()):
             syn_seg = cell.positions[dend][x][0][0]
             ica_spine[dend].append(h.Vector().record(syn_seg(0.5)._ref_ica, dt))
             v_spine[dend].append(h.Vector().record(syn_seg(0.5)._ref_v, dt))
             to_mech = getattr(syn_seg(0.5), "cacum")
             fpu_spine[dend].append(h.Vector().record(to_mech._ref_flux, dt))
-        transmitter[dend] = h.Vector().record(release[dend][0]._ref_T, dt)
+
+        first_stim_spine = list(cell.positions[dend].keys())[random_pos[0]]
+        syn_seg = cell.positions[dend][first_stim_spine][0][0]
+        transmitter[dend] = h.Vector().record(syn_seg(0.5)._ref_gluti, dt)
+
     t_vec = h.Vector().record(h._ref_t, dt)
 
     h.dt = 0.025
@@ -145,7 +143,7 @@ def main(branch, spine_density, stim_type, output_name):
                     grp.create_dataset('fpu_dend_%s'%dend,
                                        data=np.array(fpu[dend]))
                     grp.create_dataset('transmitter_1st_spine_%s'%dend,
-                                        data=np.array(trans[dend]))
+                                       data=np.array(trans[dend]))
                     for i, x in enumerate(ica_spine[dend]):
                         grp.create_dataset('ica_spine_%s_stim_%d' %(dend, i),
                                            data=np.array(x))

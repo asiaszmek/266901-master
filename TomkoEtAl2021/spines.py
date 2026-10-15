@@ -8,16 +8,11 @@ h.load_file("stdrun.hoc")
 NECK_L, NECK_DIAM = .5, 0.25
 HEAD_L, HEAD_DIAM = 0.264, 1.0
 RA = 12000
-neck_Ra = 12000
+neck_Ra = 120
 CM = 1.4
 G_PAS = 9.03e-5
 E_PAS = -65.0
 NSPINES = 100
-gAMPA = 25e-3
-AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
-
-gNMDA = gAMPA/AtoN_ratio
-
 ca_channels = ["cal12", "cal13", "can", "car", "cat"]
 
 class TomkoSpines():
@@ -51,7 +46,7 @@ class TomkoSpines():
 
                 
     def __init__(self, mod_path="Mods",
-                 spine_num=NSPINES, dend="lm_medium1", Vrest=-65, **args):
+                 spine_num=NSPINES, dend="rad_t2", Vrest=-65, **args):
         self.mods = os.path.join(".", mod_path)
         self.v_init = Vrest
         self.cell = h.CA1_PC_Tomko()
@@ -65,7 +60,7 @@ class TomkoSpines():
             section = self.find_sec(dend)
             if "spine_density" in args:
                 spine_num = int(args["spine_density"]*section.L)
-            self.positions[dend] = add_spines(section, spine_num)
+            self.positions[section.name()] = add_spines(section, spine_num)
         self.all = []
         for section in h.allsec():
             balance_currents(section, Vrest)
@@ -169,14 +164,14 @@ def add_spines(dend, n, x0=0.01, x1=0.99, neck_L=NECK_L,
         neck.insert('pas')
         neck.g_pas, neck.e_pas = G_PAS, E_PAS
 
-        neck.Ra = Ra
+        neck.Ra = neck_Ra
         head = h.Section(name='head_%d' % i)
         head.L, head.diam, head.Ra, head.cm = head_L, head_diam, Ra, cm
 
         head.insert('pas')
         head.g_pas, head.e_pas = G_PAS, E_PAS
         head.insert('cacum')
-        head(0.5).tau_cacum = 12  # Sabatini again
+        head(0.5).tau_cacum = 21  # Sabatini again
         #use the same values as in the dendrite
         head.insert('cal12')
         head(0.5).gbar_cal12 = 10e-06
@@ -188,7 +183,10 @@ def add_spines(dend, n, x0=0.01, x1=0.99, neck_L=NECK_L,
         head(0.5).gbar_can = 3e-06
         head.insert('cat')
         head(0.5).gbar_cat = 3e-06
-
+        #head.insert('nax')
+        # head(0.5).gbar_nax = 0.038
+        # head.insert('cagk')
+        # head(0.5).gbar_cagk = 4.4820097108998517e-05
         neck.connect(dend(x), 0)
         head.connect(neck(1), 0)
         necks.append(neck)
@@ -201,13 +199,13 @@ def add_spines(dend, n, x0=0.01, x1=0.99, neck_L=NECK_L,
     return positions
  
 def add_synapse_ampa(dend, gmax):
-    syn = h.AMPADJ(dend(0.5))
-    syn.gmax = gmax
+    syn = h.Wghkampa_preML(dend(0.5)) 
+    syn.Pmax = gmax
     return syn
 
 def add_synapse_nmda(dend, gmax, ca_per=0.05):
-    syn = h.NMDA5_CA(dend(0.5))    #   .ghknmda(dend(0.5))
-    syn.fCa = ca_per
-    syn.gmax = gmax
+    syn = h.ghknmda(dend(0.5))#AMPADJ(dend(0.5))
+    #syn.fCa = ca_per
+    syn.Pmax = gmax
     return syn
 

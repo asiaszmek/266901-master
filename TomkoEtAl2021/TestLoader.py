@@ -18,7 +18,7 @@ import pkg_resources
 import sys
 import spines
 
-gAMPA = 25e-3
+gAMPA = 1e-5
 AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
 gNMDA = gAMPA/AtoN_ratio
@@ -131,8 +131,8 @@ class ModelLoader(sciunit.Model,
         self.cvode_active = cvode
         self.max_dist_from_soma = 150
         
-        self.AMPA_name = "AMPA5"
-        self.NMDA_name = "NMDA5_CA"
+        self.AMPA_name = "Wghkampa_preML"
+        self.NMDA_name = "ghknmda"
         self.presynaptic = {}
         self.release = {}
         self.nc_list = {}
@@ -176,8 +176,8 @@ class ModelLoader(sciunit.Model,
             if sec_name not in self.ampars:
                 self.ampars[sec_name] = []
                 self.nmdars[sec_name] = []
-            self.ampars[sec_name].append(add_synapse_ampa(my_head, gAMPA))
-            self.nmdars[sec_name].append(add_synapse_nmda(my_head, gNMDA))
+            self.ampars[sec_name].append(spines.add_synapse_ampa(my_head, gAMPA))
+            self.nmdars[sec_name].append(spines.add_synapse_nmda(my_head, gNMDA))
             
 
     def translate(self, sectiontype, distance=0):
@@ -190,7 +190,8 @@ class ModelLoader(sciunit.Model,
     def initialize(self, args={}):
         save_stdout = sys.stdout
         sys.stdout = open('/dev/stdout', 'w')
-        new_model = spines.TomkoSpines(dend=["rad_t1", "rad_t2", "rad_t3"])
+        new_model = spines.TomkoSpines(dend=["rad_t1", "rad_t2", "rad_t3"],
+                                       spine_density=1)
         self.cell = new_model.cell
         self.soma = new_model.soma[0]
         self.positions = new_model.positions
@@ -439,15 +440,10 @@ class ModelLoader(sciunit.Model,
         return find_go(self.cell, trunk_origin=trunk_origin)
 
     def set_netstim_netcon(self, dend_loc, interval, number):
-        if dend_loc not in self.presynaptic:
-            self.presynaptic[dend_loc] = []
-        if dend_loc not in self.release:
-            self.release[dend_loc] = []
         if dend_loc not in self.ns_list:
             self.ns_list[dend_loc] = []
         if dend_loc not in self.nc_list:
             self.nc_list[dend_loc] = []
-        
         for i in range(number):
             self.ns_list[dend_loc].append(h.NetStim())
             self.ns_list[dend_loc][i].number = 1
@@ -508,7 +504,7 @@ class ModelLoader(sciunit.Model,
             h.cvode_active(1)
         else:
             h.cvode_active(0)
-        print(dend_loc)
+
         self.add_synapses(dend_loc)
 
         my_dend_loc = dend_loc[0]
@@ -530,7 +526,6 @@ class ModelLoader(sciunit.Model,
         rec_v_dend.record(self.dendrite(self.xloc)._ref_v)
 
         tstop = 500
-        print("Make a run")
         h.stdinit()
         h.dt = self.dt
         h.steps_per_ms = 1/self.dt
@@ -538,7 +533,6 @@ class ModelLoader(sciunit.Model,
         h.celsius = self.celsius
         h.init()
         h.continuerun(tstop)
-        print("stop the run")
         # get recordings
         t = numpy.array(rec_t)
         v = numpy.array(rec_v)

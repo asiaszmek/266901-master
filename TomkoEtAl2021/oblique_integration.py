@@ -15,7 +15,7 @@ savepath = './figs/'
 if not os.path.exists(savepath):
     os.mkdir(savepath)
 
-gAMPA = 25e-3
+gAMPA = 1e-5
 AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
 gNMDA = gAMPA/AtoN_ratio
@@ -24,6 +24,7 @@ def main():
     
     cell = spines.TomkoSpines(spine_num=471, dend=["rad_t2"])
     stim_start = 150
+    amp = {"prox" :10, "dist":1}
     stim_interval = 0.2
     post = {
         "prox": [94, 95, 96, 97, 98],
@@ -33,35 +34,41 @@ def main():
         "prox": 0,
         "dist": 100
     }
-    pre = {"prox": [], "dist": []}
-    release = {"prox": [], "dist": []}
+    #pre = {"prox": [], "dist": []}
+    #release = {"prox": [], "dist": []}
     stims = {"prox": [], "dist": []}
     net_connections = {"prox": [], "dist": []}
     ampars = {"prox": [], "dist": []}
     nmdars = {"prox": [], "dist": []}
-    pos = list(cell.positions["rad_t2"].keys())
+    dend_key = list(cell.positions.keys())[0]
+    pos = list(cell.positions[dend_key].keys())
     for key in ["prox", "dist"]:
         for i in range(5):
-            pre[key].append(h.Section("PRE_%s_%d" % (key, i)))
-            release[key].append(h.depletion(pre[key][i](0.5)))
-            if key == "prox":
-                stim, netcon = spines.add_stim(release[key][i], 1,
-                                               1, stim_start + i * stim_interval, 1)
-            else:
-                stim, netcon = spines.add_stim(release[key][i], 1,
-                                               1, 100+stim_start + i * stim_interval, 1)
-            stims[key].append(stim)
-            net_connections[key].append(netcon)
+            #pre[key].append(h.Section("PRE_%s_%d" % (key, i)))
+            #release[key].append(h.depletion(pre[key][i](0.5)))
             spine_idx = post[key][i]
-            sec = cell.positions["rad_t2"][pos[spine_idx]][0][0]
+            
+            sec = cell.positions[dend_key][pos[spine_idx]][0][0]
             ampars[key].append(spines.add_synapse_ampa(sec, gAMPA))
             nmdars[key].append(spines.add_synapse_nmda(sec, gNMDA))
             
-            h.setpointer(release[key][i]._ref_T, 'T', ampars[key][i]) #  nmdar
-            h.setpointer(release[key][i]._ref_T, 'T', nmdars[key][i]) #  ampar
+            stim, netcon = spines.add_stim(ampars[key][i], 1,
+                                           1, delay[key]+stim_start +
+                                           i * stim_interval, 1)
+            stims[key].append(stim)
+            net_connections[key].append(netcon)
+            stim, netcon = spines.add_stim(nmdars[key][i], 1,
+                                           1, delay[key]+stim_start +
+                                           i * stim_interval, 1)
+
+
+            stims[key].append(stim)
+            net_connections[key].append(netcon)
+           
+  
 
     v_vec_soma = h.Vector().record(cell.soma[0](0.5)._ref_v)
-    my_sec = cell.find_sec("rad_t2")
+    my_sec = cell.find_sec(dend_key)
     v_vec_dend_prox = h.Vector().record(my_sec(0.2)._ref_v)
     v_vec_dend_dist = h.Vector().record(my_sec(0.8)._ref_v)
     t_vec = h.Vector().record(h._ref_t)
@@ -72,8 +79,8 @@ def main():
     h.celsius = 35
     h.finitialize(-65)
     h.fcurrent()
-    #h.cvode_active(1)
-    #h.cvode.atol(1e-6)
+    h.cvode_active(1)
+    h.cvode.atol(1e-6)
 
     h.continuerun(tstop)
 
@@ -94,10 +101,10 @@ def main():
     plt.xlabel('Time (ms)')
     plt.title('distal location')
     plt.legend()
-    # plt.show()
+    
     plt.savefig(savepath + 'oblique_integration.png', format='png')
-    plt.close()
-
+    #plt.close()
+    plt.show()
 
 if __name__ == '__main__':
     main()
