@@ -102,7 +102,7 @@ BREAKPOINT {
     mgb = mgblock(v)
     
     : Area is just for unit conversion of ghk output
-    ica = P*10.6*mgb*ghk(v, cai, cao,2)*Area
+    ica = P*mgb*ghk(v, cai, cao,2)*Area
     ina = P*mgb*ghk(v, nai, nao,1)*Area	
     
     ica_nmdar = ica

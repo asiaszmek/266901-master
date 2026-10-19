@@ -78,7 +78,7 @@ PARAMETER {
     : winit=1		(1)
     
     :Presynaptic
-    tau_rec = 0.8 (ms)
+    tau_rec = 3000 (ms)
     tau_in = 3 (ms)
     U_SE_init = 0.1 (1)
     U_SE_factor = 0 (1)

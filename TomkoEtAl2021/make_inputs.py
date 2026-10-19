@@ -96,7 +96,8 @@ if __name__ == "__main__":
                 inj_site.set("injectionSite", stim_spine)
                 rates = etree.SubElement(inj_site, "rates")
                 rates.text = inj_spine
-                root_fname = "%s_%s_%s_%s.xml" % (dend_key, protocol,
+                new_dend_key = dend_key.replace("CA1_PC_Tomko[0].", "")
+                root_fname = "%s_%s_%s_%s.xml" % (new_dend_key, protocol,
                                                   spine_key,
                                                   fname.replace(".h5", ""))
                 with open(root_fname, "w") as f1:
@@ -109,7 +110,7 @@ if __name__ == "__main__":
                 inj_site.set("injectionSite", stim_spine)
                 rates = etree.SubElement(inj_site, "rates")
                 rates.text = trans_text
-                root_fname_glu = "%s_%s_%s_%s_with_glu.xml" % (dend_key, protocol,
+                root_fname_glu = "%s_%s_%s_%s_with_glu.xml" % (new_dend_key, protocol,
                                                                spine_key,
                                                                fname.replace(".h5",
                                                                              ""))

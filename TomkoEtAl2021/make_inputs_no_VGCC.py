@@ -85,15 +85,16 @@ if __name__ == "__main__":
                                        
                 fpu_spine = grp['fpu_spine_%s_stim_%d' %(which_dend, which_spine)][:]
                 inj_spine = extract_flux(t, fpu_spine)
-               
+                new_dend_key = dend_key.replace("fpu_dend",
+                                               "fpu_spine")
+                new_dend_key = new_dend_key.replace("CA1_PC_Tomko[0].", "")
                 my_root = etree.Element("StimulationSet")
                 inj_site = etree.SubElement(my_root, "InjectionStim")
                 inj_site.set("specieID", "Ca")
                 inj_site.set("injectionSite", stim_spine)
                 rates = etree.SubElement(inj_site, "rates")
                 rates.text = inj_spine
-                root_fname = "%s_%s_%s_%s.xml" % (dend_key.replace("fpu_dend",
-                                                                   "fpu_spine"),
+                root_fname = "%s_%s_%s_%s.xml" % (new_dend_key,
                                                   protocol,
                                                   spine_key, fname.replace(".h5",
                                                                            ""))
@@ -107,8 +108,7 @@ if __name__ == "__main__":
                 inj_site.set("injectionSite", stim_spine)
                 rates = etree.SubElement(inj_site, "rates")
                 rates.text = trans_text
-                root_fname_glu = "%s_%s_%s_%s_with_glu.xml" % (dend_key.replace("fpu_dend",
-                                                                                "fpu_spine"),
+                root_fname_glu = "%s_%s_%s_%s_with_glu.xml" % (new_dend_key,
                                                                protocol,
                                                                spine_key,
                                                                fname.replace(".h5",
