@@ -1,0 +1,9 @@
+{
+    "VB_TC_neuron": {
+        "morph_path": "morphologies/",  			 
+        "morphology": "out.swc",
+        "params": "config/params/old_CA1.json",
+        "protocol": "config/protocols/old_CA1.json",
+        "features": "config/features/old_CA1.json"
+    }
+}

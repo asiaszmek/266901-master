@@ -1,6 +1,6 @@
 import os
 from neuron import h, gui, load_mechanisms
-
+from hoc2swc import neuron2swc
 load_mechanisms("./Mods")
 
 h.xopen('pyramidal_cell_weak_bAP_updated.hoc')
@@ -21,17 +21,20 @@ class TomkoSpines():
             if name in sec.name():
                 return sec
 
-    def adjust_ca_buffer_capacity(self):
+    def adjust_ca_buffer_capacity(self, Bprox=60, Bapic=20):
         for sec in h.allsec():
+
             if h.ismembrane("ca_ion", sec=sec):
                 for seg in sec:
                     to_mech = getattr(seg, "cacum")
                     if sec.diam < 2:
-                        setattr(to_mech, "B", 20)
-                        self.adjust_ca_channel_gbar(seg, 20)
+                        setattr(to_mech, "B", Bapic)
+                        print(sec, Bapic)
+                        self.adjust_ca_channel_gbar(seg, Bapic)
                     else:
-                        setattr(to_mech, "B", 60)
-                        self.adjust_ca_channel_gbar(seg, 60)
+                        setattr(to_mech, "B", Bprox)
+                        print(sec, Bprox)                        
+                        self.adjust_ca_channel_gbar(seg, Bprox)
            
                 
     def adjust_ca_channel_gbar(self, segment, multiplier):
@@ -42,8 +45,6 @@ class TomkoSpines():
                 continue
             previous_value = getattr(seg_mech, "gbar")
             setattr(seg_mech, "gbar", previous_value*multiplier)
-
-
                 
     def __init__(self, mod_path="Mods",
                  spine_num=NSPINES, dend="rad_t2", Vrest=-65, **args):
@@ -67,8 +68,36 @@ class TomkoSpines():
             self.all.append(section)
         self.soma = self.cell.soma
         self.adjust_ca_buffer_capacity()
+        neuron2swc("out.swc")
+        
+class TomkoOld(TomkoSpines):
+    def __init__(self, mod_path="Mods",
+                 spine_num=NSPINES, dend="rad_t2", Vrest=-65, **args):
+        super().__init__(spine_num=spine_num, dend=dend, Vrest=Vrest, **args)
+        #increase buffering
+        #https://doi.org/10.1523/JNEUROSCI.5457-12.2013
+        self.adjust_ca_buffer_capacity(Bprox=2, Bapic=2)
+        self.scale_gbar("cat", 0.7, location="All")
+        #https://pmc.ncbi.nlm.nih.gov/articles/PMC5195919/
+        self.scale_gbar("cal12", 2, location="soma")
+        self.scale_gbar("cal13", 2, location="ALL")
 
         
+    def scale_gbar(self, mech_name, multiplier, location):
+        if location == "All" or location == "all" or location == "ALL":
+            location = self.cell.all
+        if isinstance(str, location):
+            location = [location]
+        for loc in location:
+            sec = self.find_sec(loc)
+            for seg in sec:
+                to_mech = getattr(seg, mech_name)
+                previous_value = getattr(to_mech, "gbar")
+                setattr(to_mech, "gbar", multiplier*previous_value)
+
+
+
+                
 def add_stim(syn, pairings, inter, start, w):
     stim = h.NetStim()
     stim.number = pairings

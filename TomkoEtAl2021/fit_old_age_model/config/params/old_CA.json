@@ -1,0 +1,87 @@
+{
+    "mechanisms": {
+        "all":
+        {"mech":["pas",
+		 "nav16a", "nav11a",
+		 "HCN4",
+                 "cacc"]},
+        "somatic":
+        {"mech":[ "nav13a",
+		  "Kv32", "Kv42", "Kv7372",
+		  "HCN2",
+		  "TC_cad", "cav11", "cav12", "cav31",
+		  "SK_E2","BKCA_v_beta"
+		  ]},
+        "alldend":
+        {"mech":["nav13a",
+		 "Kv42", "Kv7372",
+		 "TC_cad",  "cav11", "cav12", "cav31",
+		 "SK_E2", "BKCA_v_beta"]},
+	"axonal":
+        {"mech":["Kv32"]}
+    },
+    "distributions": {
+    },
+    "parameters": {
+        "__comment": "define constants as single values and params to optimize as tuples of bounds: [lower, upper]",
+        "global":   [
+            {"name":"v_init",   "val":-80},
+            {"name":"celsius",  "val":23}
+        ],
+        "all": [
+            {"name":"cm",                     "val":0.43},
+            {"name":"Ra",                     "val":60},
+            {"name":"ena",                    "val":50},
+            {"name":"ek",                     "val":-90},
+	    {"name":"ecl",                     "val":-86},
+	    {"name":"e_pas",                  "val":-85},
+            {"name":"g_pas",                  "val":[1e-06, 1e-04]}
+        ],
+        "axonal": [
+	    {"name":"gbar_nav16a", "val":[0, 0.01]},
+            {"name":"gbar_nav11a",          "val":[0, 0.8]},
+	    {"name":"gbar_Kv32",           "val":[0, 0.2]},
+	    {"name":"gbar_HCN4",              "val":[0, 1e-4]},
+	    {"name":"gbar_cacc", "val":[0, 0.1]}
+        ],
+        "somatic": [
+	    {"name":"gbar_nav16a", "val":[0, 0.01]},
+	    {"name":"gbar_nav13a",          "val":[0, 0.2]},
+	    {"name":"gbar_nav11a", "val":[0, 0.1]},
+	    
+	    {"name":"gbar_Kv32",           "val":[0, 0.2]},
+	    {"name":"gbar_Kv42",           "val":[0, 0.07]},
+	    {"name":"gbar_Kv7372",           "val":[0, 0.007]},
+
+            {"name":"gbar_HCN4",     "val":[0, 1e-4]},
+	    {"name":"gbar_HCN2",     "val":[0, 1e-4]},
+	    
+            {"name":"gbar_cav11",     "val":[0, 2e-2]},
+	    {"name":"gbar_cav12",     "val":[0, 2e-2]},
+	    {"name":"gbar_cav31",     "val":[0, 2e-4]},
+
+	    {"name":"gbar_SK_E2",        "val":[0, 0.005]},
+	    {"name":"gbar_BKCA_v_beta",        "val":[0, 0.05]},
+	    {"name":"gbar_cacc", "val":[0, 0.1]}
+        ],
+        "alldend": [
+	    {"name":"gbar_nav16a", "val":[0, 0.01]},
+	    {"name":"gbar_nav13a",          "val":[0, 0.06]},
+	    {"name":"gbar_nav11a",          "val":[0, 0.06]},
+
+
+	    {"name":"gbar_Kv42",           "val":[0, 0.008]},
+	    {"name":"gbar_Kv7372",           "val":[0, 0.007]},
+
+	    {"name":"gbar_HCN4",     "val":[0, 1e-4]},
+	    
+	    {"name":"gbar_cav11",     "val":[0, 1e-2]},
+	    {"name":"gbar_cav12",     "val":[0, 1e-2]},
+	    {"name":"gbar_cav31",     "val":[0, 1e-4]},
+
+	    {"name":"gbar_SK_E2",        "val":[0, 0.005]},
+	    {"name":"gbar_BKCA_v_beta",        "val":[0, 0.05]},
+	    {"name":"gbar_cacc", "val":[0, 0.05]}
+        ]
+    }
+}
