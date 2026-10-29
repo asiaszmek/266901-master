@@ -1,6 +1,6 @@
 import os
 from neuron import h, gui, load_mechanisms
-from hoc2swc import neuron2swc
+
 load_mechanisms("./Mods")
 
 h.xopen('pyramidal_cell_weak_bAP_updated.hoc')
@@ -68,7 +68,9 @@ class TomkoSpines():
             self.all.append(section)
         self.soma = self.cell.soma
         self.adjust_ca_buffer_capacity()
-        neuron2swc("out.swc")
+               
+        
+        
         
 class TomkoOld(TomkoSpines):
     def __init__(self, mod_path="Mods",
@@ -81,6 +83,13 @@ class TomkoOld(TomkoSpines):
         #https://pmc.ncbi.nlm.nih.gov/articles/PMC5195919/
         self.scale_gbar("cal12", 2, location="soma")
         self.scale_gbar("cal13", 2, location="ALL")
+        whole_area = 0
+        for sec in self.all:
+            for seg in sec:
+                whole_area += seg.area()
+                if "axon" not in sec.name():
+                    sec.g_pas = sec.g_pas*2
+                    sec.cm = sec.cm*2
 
         
     def scale_gbar(self, mech_name, multiplier, location):

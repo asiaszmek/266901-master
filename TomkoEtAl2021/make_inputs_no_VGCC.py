@@ -17,7 +17,7 @@ length_dict = {
 stim_spine = "sa1[0].pointA"
 
 sites_list = ["dend0%d:submembrane" % i for i in range(1, 10)]
-sites_list2 = ["dend%d:submembrane" % i for i in range(10, 22)]
+sites_list2 = ["dend%d:submembrane" % i for i in range(10, 52)]
 sites_list += sites_list2
 
 def Parser():
