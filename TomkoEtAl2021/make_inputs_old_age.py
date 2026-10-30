@@ -89,7 +89,7 @@ if __name__ == "__main__":
                 print(which_spine)
                                        
                 fpu_spine = grp['fpu_spine_%s_stim_%d' %(which_dend, which_spine)][:]
-                inj_spine = extract_flux(t, fpu_spine, 0.5)
+                inj_spine = extract_flux(t, fpu_spine, 0.75)
                
                 inj_site = etree.SubElement(my_root, "InjectionStim")
                 inj_site.set("specieID", "Ca")

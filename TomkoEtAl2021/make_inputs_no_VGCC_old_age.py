@@ -84,7 +84,7 @@ if __name__ == "__main__":
                 print(which_spine)
                                        
                 fpu_spine = grp['fpu_spine_%s_stim_%d' %(which_dend, which_spine)][:]
-                inj_spine = extract_flux(t, fpu_spine, 0.5)
+                inj_spine = extract_flux(t, fpu_spine, 0.75)
                 new_dend_key = dend_key.replace("fpu_dend",
                                                 "fpu_spine")
                 new_dend_key = new_dend_key.replace("CA1_PC_Tomko[0].", "")
