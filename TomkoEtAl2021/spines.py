@@ -79,7 +79,7 @@ class TomkoOld(TomkoSpines):
         self.adjust_ca_buffer_capacity(Bprox=2, Bapic=2)
         self.scale_gbar("cat", 0.7, location="ALL")
         
-        #https://pmc.ncbi.nlm.nih.gov/articles/PMC5195919/
+        #https://onlinelibrary.wiley.com/doi/10.1111/acel.12157
         self.scale_gbar("cal12", 2, location="soma")
         #. doi: 10.1111/acel.13781
         self.scale_gbar("cal13", 1.5, location="ALL")
