@@ -8,7 +8,7 @@ from neuron import h,  load_mechanisms
 import spines 
 gAMPA = 0.75e-5 #10.1007/s10522-014-9548-6
 
-AtoN_ratio = 1
+AtoN_ratio = 3
 
 gNMDA = gAMPA/AtoN_ratio
 
