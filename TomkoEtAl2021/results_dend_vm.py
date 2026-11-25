@@ -1,0 +1,70 @@
+import os
+import argparse
+
+import h5py
+import matplotlib.pyplot as plt
+
+
+def Parser():
+    parser = argparse.ArgumentParser(description='Plot Vm at soma')
+    parser.add_argument('input', nargs="+",
+                        help='input h5 file')
+    return parser
+
+
+if __name__ == "__main__":
+    args = Parser().parse_args()
+    
+    for FNAME in args.input:
+        f = h5py.File(FNAME, 'r')
+        protocols = list(f.keys())
+        stim_spines = list(f[protocols[0]].keys())
+        spine_keys = sorted(f[protocols[0]].keys(),
+                            key=lambda s: int(s.replace('spines', '')))
+        dend_keys = []
+        for key in f[protocols[0]][stim_spines[0]].keys():
+            if key.startswith("v_dend"):
+                dend_keys.append(key)
+
+        figs, axes = [], []
+        
+        for dend in dend_keys:
+            fig, ax = plt.subplots(len(protocols), len(spine_keys),
+                                   figsize=(5 * len(spine_keys),
+                                            4 * len(protocols)))
+            figs.append(fig)
+            axes.append(ax)
+
+
+        for l, dend_key in enumerate(dend_keys):
+            figs[l].suptitle(dend_key)
+            for i, protocol in enumerate(protocols):
+                min_y = []
+                max_y = []
+                for j, spine_key in enumerate(spine_keys):
+                    ax = axes[l][i, j]
+                    grp = f[protocol][spine_key]
+
+                    ax.plot(grp['t'][:], grp[dend_key][:],
+                            label=dend_key.replace("v_dend", ""))
+                    ax.set_title(protocol + ' - ' + spine_key)
+                    min_y.append(min(ax.get_ylim()))
+                    max_y.append(max(ax.get_ylim()))
+                for j in range(len(spine_keys)):
+                    axes[l][i, j].set_ylim([min(min_y), max(max_y)])
+                    if i == 2:
+                        ax.set_xlabel('Time (ms)')
+                    else:
+            
+                        pass
+                    if j == 0:
+                        ax.set_ylabel('ica_dend in segment (mA/cm2)')
+                    else:
+                        axes[l][i, j].set_yticks([])
+            plt.tight_layout()
+            figs[l].savefig("Dend_Vm_%s_%s.png" %(dend_key.replace("v_dend",
+                                                                    ""),
+                                                   FNAME.replace(".h5","")),
+                            format='png', bbox_inches='tight')
+
+   
