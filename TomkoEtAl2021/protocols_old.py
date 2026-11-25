@@ -12,7 +12,7 @@ AtoN_ratio = 3
 
 gNMDA = gAMPA/AtoN_ratio
 
-SPINE_COUNTS = [1, 2, 3, 5, 8, 10, 15, 20]
+SPINE_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 9,10]
 PROTOCOLS = {
     '1EPSP': (1, 10.0),
     '4EPSP_100Hz': (4, 10.0),
@@ -20,7 +20,7 @@ PROTOCOLS = {
 }
 
 
-STIM_START = 150.0
+STIM_START = 500.0
 TAIL = 300.0
 Vrest = -65
 

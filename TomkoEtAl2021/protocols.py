@@ -11,7 +11,7 @@ AtoN_ratio = 2.1 # at 6-8 weeks  doi: 10.1113/jphysiol.2008.160929
 
 gNMDA = gAMPA/AtoN_ratio
 
-SPINE_COUNTS = [1, 2, 3, 5, 8, 10, 15, 20]
+SPINE_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 PROTOCOLS = {
     '1EPSP': (1, 10.0),
     '4EPSP_100Hz': (4, 10.0),
@@ -19,7 +19,7 @@ PROTOCOLS = {
 }
 
 
-STIM_START = 150.0
+STIM_START = 500.0
 TAIL = 300.0
 Vrest = -65
 
@@ -84,11 +84,12 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
     v_soma = h.Vector().record(cell.soma[0](0.5)._ref_v, dt)
     ica_dend = {}
     flux_per_um = {}
+    v_dend = {}
     for dend in cell.positions:
         x = cell.find_sec(dend)
    
         ica_dend[dend] = h.Vector().record(x(0.5)._ref_ica, dt)
-      
+        v_dend[dend] = h.Vector().record(x(0.5)._ref_v, dt)
         to_mech = getattr(x(0.5), "cacum")
         flux_per_um[dend] = h.Vector().record(to_mech._ref_flux_per_um, dt)
     ica_spine = {}
@@ -122,7 +123,7 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
     h.cvode.atol(1e-6)
     h.continuerun(tstop)
 
-    return t_vec, ica_soma, ica_dend, ica_spine, v_soma, v_spine, flux_per_um, fpu_spine, transmitter
+    return t_vec, ica_soma, ica_dend, ica_spine, v_soma, v_spine, flux_per_um, fpu_spine, transmitter, v_dend
 
 
 def main(branch, spine_density, stim_type, output_name):
@@ -133,13 +134,16 @@ def main(branch, spine_density, stim_type, output_name):
                 out = run(n_syn,
                           number,
                           interval, branch, spine_density, stim_type)
-                t, ica_soma, ica_dend, ica_spine, v_soma, v_spine, fpu, fpu_spine, trans = out
+                t, ica_soma, ica_dend, ica_spine, v_soma, v_spine, fpu, fpu_spine, trans, v_dend = out
                 grp = f.create_group('%s/%dspines' % (protocol, n_syn))
                 grp.create_dataset('t', data=np.array(t))
                 grp.create_dataset('ica_soma', data=np.array(ica_soma))
                 for dend in ica_dend.keys():
                     grp.create_dataset('ica_dend_%s'%dend,
                                        data=np.array(ica_dend[dend]))
+                    grp.create_dataset('v_dend_%s'%dend,
+                                       data=np.array(v_dend[dend]))
+
                     grp.create_dataset('fpu_dend_%s'%dend,
                                        data=np.array(fpu[dend]))
                     grp.create_dataset('transmitter_1st_spine_%s'%dend,
