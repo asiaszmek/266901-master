@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 from lxml import etree
 
-stim_time = 150
+stim_time = 500
 FNAME = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'results.h5')
 
 length_dict = {
@@ -48,7 +48,8 @@ def extract_flux(t, flux):
     for i in indx_change:
         if t[i+1] != 0:
             if int(out[i+1])>= 0:
-                inj_text += "%4.2f %d\n" %(t[i+1]+2850, int(out[i+1]))
+                inj_text += "%4.2f %d\n" %(t[i+1]+3000-stim_time,
+                                           int(out[i+1]))
     inj_text += ""
     return inj_text    
 

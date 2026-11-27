@@ -22,37 +22,20 @@ if __name__ == "__main__":
         spine_keys = sorted(f[protocols[0]].keys(), key=lambda s:
                             int(s.replace('spines', '')))
 
-        fig, axes = plt.subplots(len(protocols), len(spine_keys),
-                                 figsize=(5 * len(spine_keys),
-                                          4 * len(protocols)))
-        random_pos = [17, 72, 97, 8, 32, 15, 63, 57, 60, 83, 48, 26,
-                      12, 62, 3, 49, 55, 77]
+        fig, ax = plt.subplots(len(protocols), 1,
+                                 figsize=(5, 4*len(protocols)))
 
         for i, protocol in enumerate(protocols):
 
-            min_y = []
-            max_y = []
+           
             for j, spine_key in enumerate(spine_keys):
-                ax = axes[i, j]
                 grp = f[protocol][spine_key]
-
-                ax.plot(grp['t'][:], grp["v_soma"][:])
-                ax.set_title(protocol + ' - ' + spine_key)
-                min_y.append(min(ax.get_ylim()))
-                max_y.append(max(ax.get_ylim()))
-            for j in range(len(spine_keys)):
-                axes[i, j].set_ylim([min(min_y), max(max_y)])
-                if i == 2:
-                    ax.set_xlabel('Time (ms)')
-                else:
-                
-                    axes[i, j].set_xticks([])
-                if j == 0:
-                    ax.set_ylabel('V soma (mV)')
-                else:
-                    axes[i, j].set_yticks([])
-    
-
+             
+                ax[i].plot(grp['t'][:], grp["v_soma"][:], label=spine_key)
+            ax[i].set_title(protocol)
+            ax[i].set_ylabel('V soma (mV)')
+            ax[i].legend()
+        ax[1].set_xlabel('Time (ms)')
         plt.tight_layout()
         fig.savefig("Vm_at_soma_%s.png" % fname.replace(".h5", ""),
                     format='png', bbox_inches='tight')

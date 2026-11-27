@@ -28,7 +28,7 @@ if __name__ == "__main__":
     if "clustered" in FNAME:
         random_pos = [17, 18, 19]
     else:
-        random_pos = [17, 72, 97]     
+        random_pos = [70, 71, 72]     
 
     figs, axes = [], []
 

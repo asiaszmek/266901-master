@@ -16,7 +16,7 @@ if __name__ == "__main__":
     args = Parser().parse_args()
     for FNAME in args.input:
         f = h5py.File(FNAME, 'r')
-
+        print(FNAME)
         protocols = list(f.keys())
         spine_keys = sorted(f[protocols[0]].keys(),
                             key=lambda s: int(s.replace('spines', '')))
@@ -25,48 +25,25 @@ if __name__ == "__main__":
         for key in f[protocols[0]][stim_spines[0]].keys():
             if key.startswith("ica_dend_"):
                 dend_keys.append(key.replace("ica_dend_", ""))
-        if "clustered" in FNAME:
-            random_pos = [17, 18, 19]
-        else:
-            random_pos = [17, 72, 97]     
-
         figs, axes = [], []
 
         for dend in dend_keys:
-            fig, ax = plt.subplots(len(protocols), len(spine_keys),
-                                   figsize=(5 * len(spine_keys), 4 * len(protocols)))
+            fig, ax = plt.subplots(len(protocols), 1,
+                                   figsize=(5, 4 * len(protocols)))
             figs.append(fig)
             axes.append(ax)
-
 
         for l, dend_key in enumerate(dend_keys):
             figs[l].suptitle(dend_key)
             for i, protocol in enumerate(protocols):
-
-                min_y = []
+                ax = axes[l][i]
+                ax.set_title(protocol)
                 for j, spine_key in enumerate(spine_keys):
-                    ax = axes[l][i, j]
                     grp = f[protocol][spine_key]
-                    for k in random_pos[:3]:
-                        x = grp['ica_spine_%s_stim_%d'%(dend_key, k)]
-                        ax.plot(grp['t'][:], x[:], label="spine %d" % k)
-
-                    ax.set_title(protocol + ' - ' + spine_key)
-
-                    min_y.append(min(ax.get_ylim()))
-
-                for j in range(len(spine_keys)):
-                    axes[l][i, j].set_ylim([min(min_y), 0])
-                    if i == 2:
-                        axes[l][i, j].set_xlabel('Time (ms)')
-                    else:
-            
-                        axes[l][i, j].set_xticks([])
-                    if j == 0:
-                        axes[l][i, j].set_ylabel('Spine iCa (mA/cm2)')
-                    else:
-                        axes[l][i, j].set_yticks([])
-            
+                    x = grp['ica_spine_%s_stim_%d'%(dend_key, 17)]
+                    ax.plot(grp['t'][:], x[:], label="stim %d spines" % (j+1))
+                ax.set_ylabel('Spine iCa (mA/cm2)')
+            ax.set_xlabel('Time (ms)')
             plt.tight_layout()
             figs[l].savefig("Spine_iCA_%s_%s.png" %
                             (dend_key.replace("ica_spine", ""),

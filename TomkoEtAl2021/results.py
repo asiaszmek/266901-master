@@ -29,9 +29,8 @@ if __name__ == "__main__":
         figs, axes = [], []
         
         for dend in dend_keys:
-            fig, ax = plt.subplots(len(protocols), len(spine_keys),
-                                   figsize=(5 * len(spine_keys),
-                                            4 * len(protocols)))
+            fig, ax = plt.subplots(len(protocols), figsize=(5,
+                                                            4 * len(protocols)))
             figs.append(fig)
             axes.append(ax)
 
@@ -39,28 +38,14 @@ if __name__ == "__main__":
         for l, dend_key in enumerate(dend_keys):
             figs[l].suptitle(dend_key)
             for i, protocol in enumerate(protocols):
-                min_y = []
-                max_y = []
+                ax = axes[l][i]
+                ax.set_title(protocol)
                 for j, spine_key in enumerate(spine_keys):
-                    ax = axes[l][i, j]
                     grp = f[protocol][spine_key]
-
                     ax.plot(grp['t'][:], grp[dend_key][:],
-                            label=dend_key.replace("ica_dend", ""))
-                    ax.set_title(protocol + ' - ' + spine_key)
-                    min_y.append(min(ax.get_ylim()))
-                    max_y.append(max(ax.get_ylim()))
-                for j in range(len(spine_keys)):
-                    axes[l][i, j].set_ylim([min(min_y), max(max_y)])
-                    if i == 2:
-                        ax.set_xlabel('Time (ms)')
-                    else:
-            
-                        pass
-                    if j == 0:
-                        ax.set_ylabel('ica_dend in segment (mA/cm2)')
-                    else:
-                        axes[l][i, j].set_yticks([])
+                            label="stim %d spines" % (j+1))
+                ax.set_ylabel('ica_dend in segment (mA/cm2)')
+            ax.set_xlabel('Time (ms)')
             plt.tight_layout()
             figs[l].savefig("Dend_ICa_%s_%s.png" %(dend_key.replace("ica_dend",
                                                                     ""),

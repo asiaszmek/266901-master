@@ -60,7 +60,8 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
             random_pos = [x+17 for x in range(n_syn)] 
         print(random_pos)
         
-        head_list = [cell.positions[dend][x][0][0] for x in cell.positions[dend].keys()]
+        head_list = [cell.positions[dend][x][0][0]
+                     for x in cell.positions[dend].keys()]
         targets = [head_list[x] for x in random_pos]
         syns_ampar[dend] = []
         syns_nmdar[dend] = []
@@ -115,9 +116,9 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
 
     h.dt = 0.025
     tstop = STIM_START + number * interval + TAIL
-    h.v_init = -65
+    h.v_init = Vrest
     h.celsius = 35
-    h.finitialize(-65)
+    h.finitialize(Vrest)
     h.fcurrent()
     h.cvode_active(1)
     h.cvode.atol(1e-6)

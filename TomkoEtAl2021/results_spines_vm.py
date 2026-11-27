@@ -13,7 +13,7 @@ def Parser():
 if __name__ == "__main__":
     args = Parser().parse_args()
     for FNAME in args.input:
-
+        print(FNAME)
         f = h5py.File(FNAME, 'r')
 
         protocols = list(f.keys())
@@ -29,13 +29,12 @@ if __name__ == "__main__":
         if "clustered" in FNAME:
             random_pos = [17, 18, 19]
         else:
-            random_pos = [17, 72, 97]
+            random_pos = [70, 71, 72]
         figs, axes = [], []
 
         for dend in dend_keys:
-            fig, ax = plt.subplots(len(protocols), len(spine_keys),
-                                   figsize=(5 * len(spine_keys),
-                                            4 * len(protocols)))
+            fig, ax = plt.subplots(len(protocols), 1,
+                                   figsize=(5, 4 * len(protocols)))
             figs.append(fig)
             axes.append(ax)
 
@@ -43,29 +42,16 @@ if __name__ == "__main__":
         for l, dend_key in enumerate(dend_keys):
             figs[l].suptitle(dend_key)
             for i, protocol in enumerate(protocols):
-
-                min_y = []
+                ax = axes[l][i]
                 for j, spine_key in enumerate(spine_keys):
-                    ax = axes[l][i, j]
                     grp = f[protocol][spine_key]
-                    for k in random_pos:
-                        x = grp['v_spine_%s_stim_%d'%(dend_key, k)]
-                        ax.plot(grp['t'][:], x[:], label="spine %d" % k)
+                    x = grp['v_spine_%s_stim_%d'%(dend_key, 17)]
+                    ax.plot(grp['t'][:], x[:], label="spines stim %d" % (j+1))
 
-                    ax.set_title(protocol + ' - ' + spine_key)
-                    min_y.append(min(ax.get_ylim()))
-
-                for j in range(len(spine_keys)):
-                    axes[l][i, j].set_ylim([min(min_y), 0])
-                    if i == 2:
-                        axes[l][i, j].set_xlabel('Time (ms)')
-                    else:
-            
-                        axes[l][i, j].set_xticks([])
-                    if j == 0:
-                        axes[l][i, j].set_ylabel('v_spine (mV)')
-                    else:
-                        axes[l][i, j].set_yticks([])
+                ax.set_title(protocol + ' - ' + spine_key)
+                ax.set_ylabel('v_spine (mV)')
+            ax.legend()
+            axes[l][-1].set_xlabel('Time (ms)')
             plt.tight_layout()
             figs[l].savefig("Spines_Vm_%s_%s.png" % (dend_key,
                                                      FNAME.replace(".h5", "")),

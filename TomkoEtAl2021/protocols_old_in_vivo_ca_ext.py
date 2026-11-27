@@ -61,7 +61,8 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
             random_pos = [x+17 for x in range(n_syn)] 
         print(random_pos)
         
-        head_list = [cell.positions[dend][x][0][0] for x in cell.positions[dend].keys()]
+        head_list = [cell.positions[dend][x][0][0]
+                     for x in cell.positions[dend].keys()]
         targets = [head_list[x] for x in random_pos]
         syns_ampar[dend] = []
         syns_nmdar[dend] = []
@@ -85,11 +86,12 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
     v_soma = h.Vector().record(cell.soma[0](0.5)._ref_v, dt)
     ica_dend = {}
     flux_per_um = {}
+    v_dend = {}
     for dend in cell.positions:
         x = cell.find_sec(dend)
    
         ica_dend[dend] = h.Vector().record(x(0.5)._ref_ica, dt)
-      
+        v_dend[dend] = h.Vector().record(x(0.5)._ref_v, dt)
         to_mech = getattr(x(0.5), "cacum")
         flux_per_um[dend] = h.Vector().record(to_mech._ref_flux_per_um, dt)
     ica_spine = {}
@@ -115,15 +117,16 @@ def run(n_syn, number, interval, branch, spine_density, stim_type):
     h.cao0_ca_ion = 1.1
     h.dt = 0.025
     tstop = STIM_START + number * interval + TAIL
-    h.v_init = -65
+    h.v_init = Vrest
     h.celsius = 35
-    h.finitialize(-65)
+    h.finitialize(Vrest)
     h.fcurrent()
     h.cvode_active(1)
     h.cvode.atol(1e-6)
+    h.cao0_ca_ion = 1.1
     h.continuerun(tstop)
 
-    return t_vec, ica_soma, ica_dend, ica_spine, v_soma, v_spine, flux_per_um, fpu_spine, transmitter
+    return t_vec, ica_soma, ica_dend, ica_spine, v_soma, v_spine, flux_per_um, fpu_spine, transmitter, v_dend
 
 
 def main(branch, spine_density, stim_type, output_name):
@@ -134,13 +137,16 @@ def main(branch, spine_density, stim_type, output_name):
                 out = run(n_syn,
                           number,
                           interval, branch, spine_density, stim_type)
-                t, ica_soma, ica_dend, ica_spine, v_soma, v_spine, fpu, fpu_spine, trans = out
+                t, ica_soma, ica_dend, ica_spine, v_soma, v_spine, fpu, fpu_spine, trans, v_dend = out
                 grp = f.create_group('%s/%dspines' % (protocol, n_syn))
                 grp.create_dataset('t', data=np.array(t))
                 grp.create_dataset('ica_soma', data=np.array(ica_soma))
                 for dend in ica_dend.keys():
                     grp.create_dataset('ica_dend_%s'%dend,
                                        data=np.array(ica_dend[dend]))
+                    grp.create_dataset('v_dend_%s'%dend,
+                                       data=np.array(v_dend[dend]))
+
                     grp.create_dataset('fpu_dend_%s'%dend,
                                        data=np.array(fpu[dend]))
                     grp.create_dataset('transmitter_1st_spine_%s'%dend,
