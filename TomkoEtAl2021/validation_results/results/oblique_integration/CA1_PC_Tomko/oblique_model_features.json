@@ -1,0 +1,39 @@
+{
+    "threshold": {
+        "mean": "nan mV",
+        "sd": "nan mV"
+    },
+    "proximal_threshold": {
+        "mean": "nan mV",
+        "sd": "nan mV"
+    },
+    "distal_threshold": {
+        "mean": "nan mV",
+        "sd": "nan mV"
+    },
+    "peak_dV/dt_at_th": {
+        "mean": "nan V/s",
+        "sd": "nan V/s"
+    },
+    "degree_of_nonlinearity_at_th": {
+        "mean": "nan",
+        "sd": "nan"
+    },
+    "suprath_degree_of_nonlinearity": {
+        "mean": "nan",
+        "sd": "nan"
+    },
+    "amplitude_at_th": {
+        "mean": "nan mV",
+        "sd": "nan mV"
+    },
+    "time_to_peak_at_th": {
+        "mean": "nan ms",
+        "sd": "nan ms"
+    },
+    "asynch_degree_of_nonlin_at_th": {
+        "mean": "nan",
+        "sd": "nan"
+    },
+    "num_of_locations": "0.0"
+}

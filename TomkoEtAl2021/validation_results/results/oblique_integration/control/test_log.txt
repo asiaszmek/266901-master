@@ -1,0 +1,9 @@
+Dendrites and locations to be tested:
+[['CA1_PC_Tomko[0].rad_t1', 0.3181818181818182, 'dist'], ['CA1_PC_Tomko[0].rad_t2', 0.9, 'dist'], ['CA1_PC_Tomko[0].rad_t3', 0.9, 'dist']]
+---------------------------------------------------------------------------------------------------
+Dendrite CA1_PC_Tomko[0].rad_t2(0.9) generates dendritic spike even to smaller number of inputs - this location is not used in the test
+---------------------------------------------------------------------------------------------------
+Dendrite CA1_PC_Tomko[0].rad_t3(0.9) generates dendritic spike even to smaller number of inputs - this location is not used in the test
+---------------------------------------------------------------------------------------------------
+ZScore_avg = 10.87
+---------------------------------------------------------------------------------------------------

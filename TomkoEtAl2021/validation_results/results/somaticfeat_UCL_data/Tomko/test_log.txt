@@ -1,0 +1,7 @@
+Features excluded (due to invalid values):
+inv_fifth_ISI.Step0.2, inv_first_ISI.Step0.2, inv_fourth_ISI.Step0.2, inv_last_ISI.Step0.2, inv_second_ISI.Step0.2, inv_third_ISI.Step0.2, inv_time_to_first_spike.Step0.2, number_initial_spikes.Step0.2
+---------------------------------------------------------------------------------------------------
+Number of features succesfully evaluated: 224/232
+---------------------------------------------------------------------------------------------------
+ZScore_avg = 1.32
+---------------------------------------------------------------------------------------------------

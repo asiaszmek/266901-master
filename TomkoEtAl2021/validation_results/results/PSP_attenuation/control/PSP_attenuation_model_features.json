@@ -1,0 +1,62 @@
+{
+    "('CA1_PC_Tomko[0].radTprox2', 0.16666666666666666)": {
+        "attenuation_soma/dendrite": 0.9140181847592648,
+        "distance": 58.33333333333333
+    },
+    "('CA1_PC_Tomko[0].radTdist2', 0.35714285714285715)": {
+        "attenuation_soma/dendrite": 0.26208618274959833,
+        "distance": 335.7142857142857
+    },
+    "('CA1_PC_Tomko[0].radTdist2', 0.07142857142857142)": {
+        "attenuation_soma/dendrite": 0.31106076501314706,
+        "distance": 307.1428571428571
+    },
+    "('CA1_PC_Tomko[0].radTmed1', 0.16666666666666666)": {
+        "attenuation_soma/dendrite": 0.8268074783299438,
+        "distance": 108.33333333333333
+    },
+    "('CA1_PC_Tomko[0].radTmed2', 0.8333333333333334)": {
+        "attenuation_soma/dendrite": 0.6279034086923273,
+        "distance": 191.66666666666669
+    },
+    "('CA1_PC_Tomko[0].radTmed2', 0.5)": {
+        "attenuation_soma/dendrite": 0.6630818157432975,
+        "distance": 175.0
+    },
+    "('CA1_PC_Tomko[0].radTdist1', 0.6428571428571429)": {
+        "attenuation_soma/dendrite": 0.3980917085431297,
+        "distance": 264.2857142857143
+    },
+    "('CA1_PC_Tomko[0].radTdist2', 0.21428571428571427)": {
+        "attenuation_soma/dendrite": 0.28480149002996474,
+        "distance": 321.42857142857144
+    },
+    "('CA1_PC_Tomko[0].radTdist1', 0.9285714285714286)": {
+        "attenuation_soma/dendrite": 0.33836255342346516,
+        "distance": 292.8571428571429
+    },
+    "('CA1_PC_Tomko[0].radTprox2', 0.8333333333333334)": {
+        "attenuation_soma/dendrite": 0.862064487760651,
+        "distance": 91.66666666666667
+    },
+    "('CA1_PC_Tomko[0].radTdist1', 0.21428571428571427)": {
+        "attenuation_soma/dendrite": 0.522068205678518,
+        "distance": 221.42857142857144
+    },
+    "('CA1_PC_Tomko[0].radTmed2', 0.16666666666666666)": {
+        "attenuation_soma/dendrite": 0.7019672231389259,
+        "distance": 158.33333333333331
+    },
+    "('CA1_PC_Tomko[0].radTdist1', 0.5)": {
+        "attenuation_soma/dendrite": 0.43418788510352346,
+        "distance": 250.0
+    },
+    "('CA1_PC_Tomko[0].radTprox2', 0.5)": {
+        "attenuation_soma/dendrite": 0.8881926704729847,
+        "distance": 75.0
+    },
+    "('CA1_PC_Tomko[0].radTmed1', 0.5)": {
+        "attenuation_soma/dendrite": 0.7828910384202675,
+        "distance": 125.0
+    }
+}
