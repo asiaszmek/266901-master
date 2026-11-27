@@ -8,7 +8,7 @@ h.load_file("stdrun.hoc")
 NECK_L, NECK_DIAM = .5, 0.25
 HEAD_L, HEAD_DIAM = 0.264, 1.0
 RA = 150
-neck_Ra = 150
+neck_Ra = 10000
 CM = 1.4
 G_PAS = 9.03e-5
 E_PAS = -65.0
